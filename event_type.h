@@ -1,0 +1,14 @@
+// defines event types
+enum EVENT_TYPE
+{
+    SIMULATION_START,
+    JOB_ARRIVAL,
+    JOB_CPU_START,
+    JOB_CPU_FINISH,
+    JOB_DISK1_START,
+    JOB_DISK1_FINISH,
+    JOB_DISK2_START,
+    JOB_DISK2_FINISH,
+    JOB_EXIT,
+    SIMULATION_END
+};
