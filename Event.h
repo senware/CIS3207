@@ -14,18 +14,25 @@ private:
     int arrival_time;
 
 public:
-    //constructor
-    Event(EVENT_TYPE event_type);
-    //destructor
+    // constructor
+    Event(EVENT_TYPE, int);
     ~Event();
 
     //returns event type
-    EVENT_TYPE getEventType();
+    EVENT_TYPE get_event_type();
+
+    // returns pointer to process
+    Process *get_process();
+
+    // returns arrival time
+    int get_arrival_time();
 };
 
-Event::Event(EVENT_TYPE event_type)
+Event::Event(EVENT_TYPE event_type, int arrival_time)
 {
     this->event_type = event_type;
+    this->process = new Process();
+    this->arrival_time = arrival_time;
 }
 
 Event::~Event()
@@ -36,7 +43,17 @@ Event::~Event()
     }
 }
 
-EVENT_TYPE Event::getEventType()
+EVENT_TYPE Event::get_event_type()
 {
     return this->event_type;
+}
+
+Process *Event::get_process()
+{
+    return this->process;
+}
+
+int Event::get_arrival_time()
+{
+    return this->arrival_time;
 }

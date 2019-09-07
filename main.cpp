@@ -68,9 +68,11 @@ int main()
     const unsigned int DISK2_MIN = num[10];
     const unsigned int DISK2_MAX = num[11];
 
+    // fictional units of time spent executing
+    int time_sum = 0;
+
     // rng testing
     srand(time(NULL));
-    int rndm = rand() % (CPU_MAX - CPU_MIN) + CPU_MIN;
 
     // test file parsing
     std::cout << "Some testing..." << std::endl
@@ -78,8 +80,18 @@ int main()
               << "Seed: " << SEED << std::endl
               << "Cpu max: " << CPU_MAX << std::endl
               << "Quit Probability: " << QUIT_PROB << std::endl
-              << "Finish time: " << FIN_TIME << std::endl
-              << "Rng test: " << rndm << std::endl;
+              << "Finish time: " << FIN_TIME << std::endl;
+
+    // testing event queue
+    EventQueue event_queue;
+
+    for (int i = 0; i < 10; i++)
+    {
+        int arrival_time = rand() % (ARRIVE_MAX - ARRIVE_MIN) + ARRIVE_MIN;
+        event_queue.add(new Event(JOB_ARRIVAL, arrival_time));
+    }
+
+    event_queue.print();
 
     return 0;
 }
