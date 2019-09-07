@@ -6,9 +6,11 @@
 
 
 
-# Planning
+## Planning
 
-EVENTS:
+Note: this section will likely be redone as general documentation once the project is finished. I have a feeling the way I've been writing this out, I'd be repeating myself if I were to split it into two sections.
+
+### EVENTS
 
   Separate classes will be used to represent Event and Processes.
 
@@ -19,14 +21,18 @@ EVENTS:
   In progress.
   
   
-EVENT QUEUE:
-
-  I'm likely going to have to implement my own priority queue that sorts events by arrival time, likely a min heap using a binary tree. This is going to be super time consuming, and I wanted to avoid it, but unfortunately I don't see any way around it.
+### EVENT QUEUE
   
-  I made the file, so... in progress. Sure.
+  Events are sorted in the list as they are added in, with lower arrival times given priority.
+  
+  I realized I already had a Linked List class that I had made a while back, when I was teaching myself C++. It was based off of a java class I had made in Data Structures last semester. I just took that and reworked it into a sorted linked list that suits the specific needs of this project. I had to change pretty much every single function, but the framework was there so I didn't have to use too much brainpower. It still took me like an hour and a half cause honestly I don't have a whole lot of brainpower to go around.
+  
+  Linked lists make pretty good ordered lists when a lot of items need to be added, as they don't wrap around an array that needs to be resized or shifted or any of that awful stuff. O(n) time if you're adding an element that needs to be sorted toward the end. Not as good as a tree, which I believe is O(log(n)) or so, but more than good enough for this application.
+  
+  Done.
 
 
-PROCESSES:
+### PROCESSES
 
   Pocesses will each have a unique ID, and will store usage times for cpu and disk usage as well. These will be assigned by functions that handle events that point to each process at the appropriate times.
 
@@ -35,10 +41,8 @@ PROCESSES:
   In progress.
 
 
-CPU:
+### CPU
 
-  Struct.
-  
   1 struct cpu variable in main function.
   
   Has a boolean state variable to determine whether it is busy or not. Has a queue to hold processes when it is busy.
@@ -46,9 +50,7 @@ CPU:
   Done.
   
   
-DISK:
-
-  Struct.
+### DISK
   
   2 struct disk variables in main function.
   
@@ -57,17 +59,13 @@ DISK:
   Done.
 
 
-CONFIG:
+### CONFIG
 
-  Tbh, there really wasn't any planning that went into this, I just kinda dove in. It reads values for all of the constants I'll need out of the config file. It's ugly and sitting right on top, inside the main function. I can explain how it works when I finish everything up, and write more specific documentation.
+  It reads values for all of the constants I'll need out of the config file. It's ugly and sitting right on top, inside the main function.
   
   Done.
   
 
-MAIN LOOP:
+### MAIN LOOP:
 
-  2000 JOB_ARRIVAL events will be created, each getting an arrival time between ARRIVE_MIN and ARRIVE_MAX plus the sum of previous arrival times. This sum will be separate from the total time sum.
-
-  When the first arrival event is popped off of the queue: An arrival function will handle the event, adding its arrival time to the sum tracking the total time spent so far, throwing the process onto the cpu queue and determining that process's cpu time. A JOB_CPU_START event will be created and added to the priority queue with the current time sum as its arrival time.
-  
-  I'll add more tomorrow.
+  Right now this is basically just for testing stuff. I haven't really gotten around to the actual meat and potatoes. There is a ton of set up work to do before I can even really start this.
