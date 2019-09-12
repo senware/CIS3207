@@ -5,12 +5,7 @@
   Phil Nyce
 
 
-
-## Planning
-
-Note: this section will likely be redone as general documentation once the project is finished. I have a feeling the way I've been writing this out, I'd be repeating myself if I were to split it into two sections.
-
-### EVENTS
+## EVENTS
 
   Separate classes will be used to represent Event and Processes.
 
@@ -21,7 +16,7 @@ Note: this section will likely be redone as general documentation once the proje
   Done.
   
   
-### EVENT QUEUE
+## EVENT QUEUE
   
   Events are sorted in the list as they are added in, with lower arrival times given priority.
   
@@ -32,14 +27,14 @@ Note: this section will likely be redone as general documentation once the proje
   Done.
 
 
-### PROCESSES
+## PROCESSES
 
   Pocesses will each have a unique ID. A static variable within the process class will be used to keep track of the number of processes and to assign process IDs.
 
   Done.
 
 
-### CPU
+## CPU
 
   1 struct cpu variable in main function.
   
@@ -48,7 +43,7 @@ Note: this section will likely be redone as general documentation once the proje
   Done.
   
   
-### DISK
+## DISK
   
   2 struct disk variables in main function.
   
@@ -57,13 +52,13 @@ Note: this section will likely be redone as general documentation once the proje
   Done.
 
 
-### CONFIG
+## CONFIG
 
   It reads values for all of the constants I'll need out of the config file. It's ugly and sitting right on top, inside the main function.
   
   Done.
   
 
-### MAIN LOOP:
+## MAIN LOOP:
 
   Currently working through event handlers and main loop constructions. Things are coming together nicely and it should be like 90% done by tomorrow evening.
