@@ -14,11 +14,11 @@ Note: this section will likely be redone as general documentation once the proje
 
   Separate classes will be used to represent Event and Processes.
 
-  Events have an event type as well as a pointer to a process, and are responsible for tracking their own arrival times which will determine their position in the priority queue.
+  Events have an event type as well as a pointer to a process. They are responsible for keeping track of their own arrival times, which will determine their position in the priority queue.
 
   An enum will be used to keep track of event types.
   
-  In progress.
+  Done.
   
   
 ### EVENT QUEUE
@@ -34,11 +34,9 @@ Note: this section will likely be redone as general documentation once the proje
 
 ### PROCESSES
 
-  Pocesses will each have a unique ID, and will store usage times for cpu and disk usage as well. These will be assigned by functions that handle events that point to each process at the appropriate times.
+  Pocesses will each have a unique ID. A static variable within the process class will be used to keep track of the number of processes and to assign process IDs.
 
-  A static variable within the process class will be used to keep track of the number of processes and to assign process IDs.
-  
-  In progress.
+  Done.
 
 
 ### CPU
@@ -68,4 +66,4 @@ Note: this section will likely be redone as general documentation once the proje
 
 ### MAIN LOOP:
 
-  Right now this is basically just for testing stuff. I haven't really gotten around to the actual meat and potatoes. There is a ton of set up work to do before I can even really start this.
+  Currently working through event handlers and main loop constructions. Things are coming together nicely and it should be like 90% done by tomorrow evening.
