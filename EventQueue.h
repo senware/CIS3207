@@ -18,12 +18,17 @@ private:
 public:
     EventQueue();
 
-    void add(Event *);
+    // adds a new node to the list containing an event
+    // sorted by the event's arrival time
+    void push(Event *);
 
+    // removes the event first in line, and returns a pointer to it
     Event *pop();
 
+    // return's the size of the queue
     int get_size();
 
+    // prints a visualization of the event queue
     void print();
 };
 
@@ -37,17 +42,19 @@ EventQueue::EventQueue()
 
 // EventQueue Public Methods
 
-void EventQueue::add(Event *new_event)
+void EventQueue::push(Event *new_event)
 {
     Node *temp = new Node;
     temp->event = new_event;
 
+    // first node added to empty queue
     if (size == 0)
     {
         head = temp;
         tail = temp;
     }
 
+    // if the new event's arrival time is less than the current first in line's
     else if (new_event->get_arrival_time() < head->event->get_arrival_time())
     {
         temp->next = head;
@@ -55,6 +62,7 @@ void EventQueue::add(Event *new_event)
         head = temp;
     }
 
+    // if the new event's arrival time is less than the last in line's
     else if (new_event->get_arrival_time() < tail->event->get_arrival_time())
     {
         Node *current = this->head->next;
@@ -68,6 +76,7 @@ void EventQueue::add(Event *new_event)
         current->prev = temp;
     }
 
+    // if the new event's arrival time is greater than the last in line's
     else
     {
         temp->prev = tail;
@@ -103,6 +112,7 @@ int EventQueue::get_size()
     return this->size;
 }
 
+// TO DO: create a print function in the event class, and make this not look so fucking horrible
 void EventQueue::print()
 {
     if (size != 0)

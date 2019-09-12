@@ -19,6 +19,12 @@ public:
 
     // returns process identifier
     int get_ID();
+
+    // returns time spent on cpu
+    int get_cpu_time();
+
+    // returns time spent on disks
+    int get_disk_time();
 };
 
 // initializes process counter to 0
@@ -38,4 +44,14 @@ int Process::getIDCounter()
 int Process::get_ID()
 {
     return this->procID;
+}
+
+int Process::get_cpu_time()
+{
+    return cpu_time;
+}
+
+int Process::get_disk_time()
+{
+    return disk_time;
 }

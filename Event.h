@@ -16,6 +16,7 @@ private:
 public:
     // constructor
     Event(EVENT_TYPE, int);
+    Event(EVENT_TYPE, Process *, int);
     ~Event();
 
     //returns event type
@@ -32,6 +33,13 @@ Event::Event(EVENT_TYPE event_type, int arrival_time)
 {
     this->event_type = event_type;
     this->process = new Process();
+    this->arrival_time = arrival_time;
+}
+
+Event::Event(EVENT_TYPE event_type, Process *process, int arrival_time)
+{
+    this->event_type = event_type;
+    this->process = process;
     this->arrival_time = arrival_time;
 }
 
