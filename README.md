@@ -34,22 +34,9 @@
   Done.
 
 
-## CPU
+## CPU And Disks
 
-  1 struct cpu variable in main function.
-  
-  Has a boolean state variable to determine whether it is busy or not. Has a queue to hold processes when it is busy.
-  
-  Done.
-  
-  
-## DISK
-  
-  2 struct disk variables in main function.
-  
-  Has a boolean state variable to determine whether is is busy or not. Has a queue to hold processes when it is busy.
-  
-  Done.
+  A struct with a boolean indicating whether it's busy, and a queue.
 
 
 ## CONFIG
