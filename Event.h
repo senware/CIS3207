@@ -12,6 +12,8 @@ private:
     Process *process;
     // used to sort in a priority queue
     int arrival_time;
+    // description of event type
+    std::string description;
 
 public:
     // constructor
@@ -27,6 +29,12 @@ public:
 
     // returns arrival time
     int get_arrival_time();
+
+    // returns description of event
+    std::string get_description();
+
+private:
+    void set_description();
 };
 
 Event::Event(EVENT_TYPE event_type, int arrival_time)
@@ -34,6 +42,7 @@ Event::Event(EVENT_TYPE event_type, int arrival_time)
     this->event_type = event_type;
     this->process = new Process();
     this->arrival_time = arrival_time;
+    set_description();
 }
 
 Event::Event(EVENT_TYPE event_type, Process *process, int arrival_time)
@@ -41,6 +50,7 @@ Event::Event(EVENT_TYPE event_type, Process *process, int arrival_time)
     this->event_type = event_type;
     this->process = process;
     this->arrival_time = arrival_time;
+    set_description();
 }
 
 Event::~Event()
@@ -64,4 +74,43 @@ Process *Event::get_process()
 int Event::get_arrival_time()
 {
     return this->arrival_time;
+}
+
+std::string Event::get_description()
+{
+    return this->description;
+}
+
+void Event::set_description()
+{
+    switch (event_type)
+    {
+    case SIMULATION_START:
+        description = "Starting simulation.";
+        break;
+    case JOB_ARRIVAL:
+        description = "Process " + std::to_string(process->get_ID()) + " created.";
+        break;
+    case JOB_CPU_START:
+        description = "Process " + std::to_string(process->get_ID()) + " begins executing on CPU.";
+        break;
+    case JOB_CPU_FINISH:
+        description = "Process " + std::to_string(process->get_ID()) + " finishes executing on CPU.";
+        break;
+    case JOB_DISK_0_START:
+        description = "Process " + std::to_string(process->get_ID()) + " begins IO on disk 0.";
+        break;
+    case JOB_DISK_0_FINISH:
+        description = "Process " + std::to_string(process->get_ID()) + " finishes IO on disk 0.";
+        break;
+    case JOB_DISK_1_START:
+        description = "Process " + std::to_string(process->get_ID()) + " begins IO on disk 1.";
+        break;
+    case JOB_DISK_1_FINISH:
+        description = "Process " + std::to_string(process->get_ID()) + " finishes IO on disk 1.";
+        break;
+    case JOB_EXIT:
+        description = "Process " + std::to_string(process->get_ID()) + " has terminated successfully.";
+        break;
+    }
 }

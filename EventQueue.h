@@ -14,6 +14,8 @@ private:
     Node *head;
     Node *tail;
     int size;
+    int jobs_created;
+    int jobs_finished;
 
 public:
     EventQueue();
@@ -28,6 +30,19 @@ public:
     // return's the size of the queue
     int get_size();
 
+    // increment number of completed jobs
+    void complete_job();
+
+    // increment number of created jobs
+
+    void create_job();
+
+    // return number of created jobs
+    int get_jobs_created();
+
+    // return number of completed jobs
+    int get_jobs_finished();
+
     // prints a visualization of the event queue
     void print();
 };
@@ -37,7 +52,8 @@ EventQueue::EventQueue()
 {
     head = NULL;
     tail = NULL;
-    this->size = 0;
+    size = 0;
+    jobs_finished = 0;
 }
 
 // EventQueue Public Methods
@@ -89,22 +105,22 @@ void EventQueue::push(Event *new_event)
 
 Event *EventQueue::pop()
 {
-    if (this->size <= 0)
+    if (size <= 0)
     {
         throw;
     }
 
-    Node *del;
-    Event *new_event;
-
-    new_event = head->event;
-    del = head;
-    head = head->next;
-    head->prev = NULL;
+    Node *del = head;
+    Event *pop_event = head->event;
+    if (size > 1)
+    {
+        head = head->next;
+        head->prev = NULL;
+    }
 
     delete del;
-    this->size--;
-    return new_event;
+    size--;
+    return pop_event;
 }
 
 int EventQueue::get_size()
@@ -112,13 +128,34 @@ int EventQueue::get_size()
     return this->size;
 }
 
+void EventQueue::complete_job()
+{
+    jobs_finished++;
+}
+
+void EventQueue::create_job()
+{
+    jobs_created++;
+}
+
+int EventQueue::get_jobs_created()
+{
+    return jobs_created;
+}
+
+int EventQueue::get_jobs_finished()
+{
+    return jobs_finished;
+}
+
 // TO DO: create a print function in the event class, and make this not look so fucking horrible
 void EventQueue::print()
 {
+
     if (size != 0)
     {
         Node *current = head;
-        std::cout << "[\n";
+        std::cout << "Jobs finished: " << jobs_finished << "[\n";
         while (current->next != NULL)
         {
             std::cout << "Event type: " << current->event->get_event_type() << ", arrival time: " << current->event->get_arrival_time() << ", Process ID: " << current->event->get_process()->get_ID() << std::endl;
