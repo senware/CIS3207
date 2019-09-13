@@ -61,4 +61,14 @@
 
 ## MAIN LOOP:
 
-  Currently working through event handlers and main loop constructions. Things are coming together nicely and it should be like 90% done by tomorrow evening.
+  Pretty much done.
+  
+  
+## Logging
+
+  In progress, mostly done.
+  
+  
+## Statistics
+
+  Need to implement this functionality.
