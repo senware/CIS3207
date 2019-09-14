@@ -48,7 +48,7 @@
 ##### Run 1
 
 ###### Config.txt
-'''SEED 5468715
+```SEED 5468715
 INIT_TIME 0
 FIN_TIME 10000
 ARRIVE_MIN 10
@@ -57,10 +57,10 @@ QUIT_PROB 40
 CPU_MIN 10
 CPU_MAX 20
 DISK_MIN 40
-DISK_MAX 80'''
+DISK_MAX 80```
 
 ###### Stat
-'''[Queue Statistics]
+```[Queue Statistics]
   Average Size:
     CPU:    2
     Disk 0: 15
@@ -90,4 +90,4 @@ DISK_MAX 80'''
 [Throughput]
   CPU:    0.0644549
   Disk 0: 0.0162886
-  Disk 1: 0.015689'''
+  Disk 1: 0.015689```
