@@ -49,81 +49,45 @@
 
 ###### Config.txt
 ``SEED 5468715
-
 INIT_TIME 0
-
 FIN_TIME 10000
-
 ARRIVE_MIN 10
-
 ARRIVE_MAX 50
-
 QUIT_PROB 40
-
 CPU_MIN 10
-
 CPU_MAX 20
-
 DISK_MIN 40
-
 DISK_MAX 80``
 
 ###### Stat
 ``[Queue Statistics]
-
   Average Size:
-  
     CPU:    2
-    
     Disk 0: 15
-    
     Disk 1: 14
-    
     Events: 4
-    
   Max Size:
-  
     CPU:    8
-    
     Disk 0: 31
-    
     Disk 1: 31
-    
     Events: 5
     
-
 [Utilization Statistics]
-
   CPU:    0.967823
-  
   Disk 0: 0.978315
-  
   Disk 1: 0.967723
-  
 
 [Response Time]
-
   Average:
-  
     CPU:    15
-    
     Disk 0: 60
-    
     Disk 1: 61
-    
   Max:
-  
     CPU:    20
-    
     Disk 0: 78
-    
     Disk 1: 80
     
-
 [Throughput]
-
   CPU:    0.0644549
-  
   Disk 0: 0.0162886
-  
   Disk 1: 0.015689``
