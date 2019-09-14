@@ -38,7 +38,7 @@
   Values are read for all of the necessary constants from the config file. It's ugly and sitting right on top, inside the main function
   
 
-### MAIN LOOP:
+### MAIN LOOP
 
   Events are popped off of the queue, the system time is set to the arrival time of the event. The event is passed to the proper handlers, which are responsible for queueing new events with either new processes, processes from the event passed to them, or processes waiting in the component queues. Event handlers also set the appropriate arrival times for each new event that they create. The event is removed from memory after it is handled, and the cycle repeats.
 
@@ -47,7 +47,7 @@
 
 ##### Run 1
 
-###### Config.txt
+###### config.txt
 
 ```
 SEED 5468715
@@ -62,7 +62,7 @@ DISK_MIN 40
 DISK_MAX 80
 ```
 
-###### Stat
+###### stat.txt
 
 ```
 [Queue Statistics]
@@ -97,3 +97,109 @@ DISK_MAX 80
   Disk 0: 0.0162886
   Disk 1: 0.015689
   ```
+##### Run 2
+
+###### config.txt
+
+```
+SEED 9631548
+INIT_TIME 0
+FIN_TIME 10000
+ARRIVE_MIN 5
+ARRIVE_MAX 15
+QUIT_PROB 20
+CPU_MIN 5
+CPU_MAX 10
+DISK_MIN 20
+DISK_MAX 40
+```
+
+###### stat.txt
+
+```
+[Queue Statistics]
+  Average Size:
+    CPU:    160
+    Disk 0: 104
+    Disk 1: 103
+    Events: 4
+  Max Size:
+    CPU:    328
+    Disk 0: 212
+    Disk 1: 211
+    Events: 5
+
+[Utilization Statistics]
+  CPU:    0.996901
+  Disk 0: 0.995101
+  Disk 1: 0.995501
+
+[Response Time]
+  Average:
+    CPU:    7
+    Disk 0: 30
+    Disk 1: 29
+  Max:
+    CPU:    10
+    Disk 0: 40
+    Disk 1: 40
+
+[Throughput]
+  CPU:    0.13396
+  Disk 0: 0.0329901
+  Disk 1: 0.03339
+  ```
+  
+  ##### Run 3
+  
+  ###### config.txt
+  
+  ```
+  SEED 4632912
+INIT_TIME 0
+FIN_TIME 10000
+ARRIVE_MIN 1
+ARRIVE_MAX 5
+QUIT_PROB 50
+CPU_MIN 5
+CPU_MAX 20
+DISK_MIN 60
+DISK_MAX 120
+```
+
+###### stat.txt
+
+```
+[Queue Statistics]
+  Average Size:
+    CPU:    1370
+    Disk 0: 48
+    Disk 1: 47
+    Events: 4
+  Max Size:
+    CPU:    2734
+    Disk 0: 95
+    Disk 1: 95
+    Events: 5
+
+[Utilization Statistics]
+  CPU:    1.0013
+  Disk 0: 0.986101
+  Disk 1: 0.983802
+
+[Response Time]
+  Average:
+    CPU:    12
+    Disk 0: 90
+    Disk 1: 90
+  Max:
+    CPU:    20
+    Disk 0: 93
+    Disk 1: 120
+
+[Throughput]
+  CPU:    0.0784922
+  Disk 0: 0.0108989
+  Disk 1: 0.0108989
+  ```
+  In this last run, we can see what happens when the cpu can't keep up with the number of processes being created. Also there is a small margin for error when calculating cpu utilization, as it went very slightly over 100% usage.
