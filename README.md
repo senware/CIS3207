@@ -48,6 +48,7 @@
 ##### Run 1
 
 ###### Config.txt
+
 ``SEED 5468715
 INIT_TIME 0
 FIN_TIME 10000
@@ -60,6 +61,7 @@ DISK_MIN 40
 DISK_MAX 80``
 
 ###### Stat
+
 ``[Queue Statistics]
   Average Size:
     CPU:    2
