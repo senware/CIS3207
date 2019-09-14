@@ -19,6 +19,8 @@ public:
     // constructor
     Event(EVENT_TYPE, int);
     Event(EVENT_TYPE, Process *, int);
+    // destructor
+    // also calls process's destructor in the case of JOB_EXIT event type
     ~Event();
 
     //returns event type
@@ -34,6 +36,7 @@ public:
     std::string get_description();
 
 private:
+    // creates an event description based on event_type
     void set_description();
 };
 

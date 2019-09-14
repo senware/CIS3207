@@ -1,0 +1,31 @@
+[Queue Statistics]
+  Average Size:
+    CPU:    1370
+    Disk 0: 48
+    Disk 1: 47
+    Events: 4
+  Max Size:
+    CPU:    2734
+    Disk 0: 95
+    Disk 1: 95
+    Events: 5
+
+[Utilization Statistics]
+  CPU:    1.0013
+  Disk 0: 0.986101
+  Disk 1: 0.983802
+
+[Response Time]
+  Average:
+    CPU:    12
+    Disk 0: 90
+    Disk 1: 90
+  Max:
+    CPU:    20
+    Disk 0: 93
+    Disk 1: 120
+
+[Throughput]
+  CPU:    0.0784922
+  Disk 0: 0.0108989
+  Disk 1: 0.0108989
