@@ -1,10 +1,3 @@
-#include <iostream>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include "shell_func.h"
 
 const char *prompt = "myshell";

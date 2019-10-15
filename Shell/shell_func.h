@@ -1,9 +1,17 @@
 #include <queue>
+#include <iostream>
+#include <stdlib.h>
+#include <stdio.h>
+#include <wait.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <string.h>
 
 std::queue<char *> *tokenize(int, char *);
 std::queue<struct command *> *parse(std::queue<char *> *);
-void executecmd(std::queue<char *> *);
+void executecmd(std::queue<struct command *> *);
+bool internalcmd(char *);
 
 struct command
 {
