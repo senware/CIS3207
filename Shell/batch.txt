@@ -1,0 +1,4 @@
+command0 < input.txt | command1 arg10 arg11 arg12 & command2 arg20 arg21 >> output.txt
+command0 < input.txt | command1 arg10 arg11 arg12 & command2 arg20 arg21 >> output.txt
+command0 < input.txt | command1 arg10 arg11 arg12 & command2 arg20 arg21 >> output.txt
+command0 < input.txt | command1 arg10 arg11 arg12 & command2 arg20 arg21 >> output.txt
