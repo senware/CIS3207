@@ -3,6 +3,7 @@
 
 std::queue<char *> *tokenize(int, char *);
 std::queue<struct command *> *parse(std::queue<char *> *);
+void executecmd(std::queue<char *> *);
 
 struct command
 {
