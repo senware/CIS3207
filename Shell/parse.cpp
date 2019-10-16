@@ -9,6 +9,8 @@ std::queue<struct command *> *parse(std::queue<char *> *alist)
     clist->push(cmd);
     char *word = alist->front();
     cmd->name = word;
+    cmd->args[0] = word;
+    cmd->arg_count = 1;
     alist->pop();
     word = alist->front();
 
@@ -102,6 +104,7 @@ std::queue<struct command *> *parse(std::queue<char *> *alist)
 
         // list the command arguments
         cmd->args[0] = cmd->name;
+        cmd->arg_count = 1;
         int i = 1;
         while (notsymbol(word))
         {

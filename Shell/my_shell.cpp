@@ -17,15 +17,16 @@ int main(int argc, char **argv)
             std::queue<char *> *arglist = tokenize(strlen(line), line);
 
             std::queue<struct command *> *cmdqueue = parse(arglist);
-            delete arglist;
 
             if (cmdqueue == NULL)
-                perror("Invalid command");
+                std::cout << "Invalid command" << std::endl;
+
             else
             {
                 executecmd(cmdqueue);
             }
 
+            delete arglist;
             delete cmdqueue;
             free(line);
         }
