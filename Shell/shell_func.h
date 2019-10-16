@@ -10,8 +10,8 @@
 
 std::queue<char *> *tokenize(int, char *);
 std::queue<struct command *> *parse(std::queue<char *> *);
+bool notsymbol(char *);
 void executecmd(std::queue<struct command *> *);
-bool internalcmd(char *);
 
 struct command
 {
@@ -30,3 +30,15 @@ struct command
 
     bool background = false;
 };
+
+bool internalcmd(struct command *);
+
+void f_cd(char *);
+void f_clr();
+void f_dir(char *);
+void f_dir();
+void f_environ();
+void f_echo(char **);
+void f_help();
+void f_pause();
+void f_quit();

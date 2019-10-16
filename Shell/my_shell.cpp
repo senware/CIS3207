@@ -10,8 +10,8 @@ int main(int argc, char **argv)
         {
             std::cout << prompt << ">> ";
 
-            char *line = new char;
-            size_t buffersize = 100 * sizeof(char);
+            char *line = (char *)malloc(500 * sizeof(char));
+            size_t buffersize = 500 * sizeof(char);
             fgets(line, buffersize, stdin);
 
             std::queue<char *> *arglist = tokenize(strlen(line), line);
@@ -21,15 +21,20 @@ int main(int argc, char **argv)
 
             if (cmdqueue == NULL)
                 perror("Invalid command");
+            else
+            {
+                executecmd(cmdqueue);
+            }
 
             delete cmdqueue;
+            free(line);
         }
     }
     else
     {
         FILE *batchcmd = fopen(argv[1], "r");
-        char *line = new char;
-        size_t buffersize = 100 * sizeof(char);
+        char *line = (char *)malloc(500 * sizeof(char));
+        size_t buffersize = 500 * sizeof(char);
 
         fgets(line, buffersize, batchcmd);
 
@@ -40,8 +45,8 @@ int main(int argc, char **argv)
 
         while (!feof(batchcmd))
         {
-            delete line;
-            line = new char;
+            free(line);
+            line = (char *)malloc(500 * sizeof(char));
             fgets(line, buffersize, batchcmd);
 
             arglist = tokenize(strlen(line), line);
@@ -52,7 +57,7 @@ int main(int argc, char **argv)
             delete cmdqueue;
         }
 
-        delete line;
+        free(line);
         delete batchcmd;
     }
     return 0;

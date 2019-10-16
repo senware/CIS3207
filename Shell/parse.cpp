@@ -15,9 +15,13 @@ std::queue<struct command *> *parse(std::queue<char *> *alist)
     // iterate through the rest of the arguments
     while (!alist->empty())
     {
+        if (word == NULL)
+        {
+            break;
+        }
 
         // check for input redirection argument
-        if (strcmp(word, "<") == 0)
+        if (word != NULL && strcmp(word, "<") == 0)
         {
             cmd->redirect_in = true;
             alist->pop();
@@ -28,7 +32,7 @@ std::queue<struct command *> *parse(std::queue<char *> *alist)
         }
 
         // check for output redirection argument
-        if (strcmp(word, ">") == 0 || strcmp(word, ">>") == 0)
+        if (word != NULL && (strcmp(word, ">") == 0 || strcmp(word, ">>") == 0))
         {
             if (strcmp(word, ">>") == 0)
                 cmd->truncate = true;
@@ -80,7 +84,7 @@ std::queue<struct command *> *parse(std::queue<char *> *alist)
         }
 
         // check for background processing argument
-        if (strcmp(word, "&") == 0)
+        if (word != NULL && strcmp(word, "&") == 0)
         {
             cmd->background = true;
             alist->pop();
@@ -97,8 +101,9 @@ std::queue<struct command *> *parse(std::queue<char *> *alist)
         }
 
         // list the command arguments
-        int i = 0;
-        while (strcmp(word, "<") != 0 && strcmp(word, ">") != 0 && strcmp(word, ">>") != 0 && strcmp(word, "|") != 0 && strcmp(word, "&") != 0)
+        cmd->args[0] = cmd->name;
+        int i = 1;
+        while (notsymbol(word))
         {
             cmd->args[i] = word;
             cmd->arg_count++;
@@ -111,5 +116,11 @@ std::queue<struct command *> *parse(std::queue<char *> *alist)
         }
         cmd->args[i] = NULL;
     }
+
     return clist;
+}
+
+bool notsymbol(char *word)
+{
+    return word != NULL && strcmp(word, "<") != 0 && strcmp(word, ">") != 0 && strcmp(word, ">>") != 0 && strcmp(word, "|") != 0 && strcmp(word, "&") != 0;
 }
