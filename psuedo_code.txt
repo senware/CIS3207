@@ -1,0 +1,390 @@
+# global #
+
+string prompt // a c++ string yay
+
+char *built_in_cmd[8] = 
+	"cd", "clr", "dir", "environ". "echo", "help", "pause", "quit"
+
+struct command
+
+	int num_cmds = 0
+	char *cmds[num_cmds]
+	char *args[num_cmds][10]
+	bool redirect_in = false
+	bool redirect_out_trunc = false
+	bool redirect_in_app = false
+	char *new_in = NULL
+	char *new_out = NULL
+	bool pipes = false
+	bool background = false
+
+
+
+# main loop #
+
+//no args loop
+if argc == 0
+	while(1)
+		print prompt
+		read line from the standard input
+		*queue = tokenize(line)
+		struct command cmd = parse(queue)
+		if cmd != NULL
+			execute(cmd)
+		else
+			print an error message
+		
+//batch
+else if argc > 0
+	file = argv[1]
+	while not EOF
+		read line from file
+		*queue = tokenize(line)
+		struct command cmd = parse(queue)
+		if cmd != NULL
+			execute(cmd)
+		else
+			print an error message
+			
+			
+
+# tokenize #
+
+// input: line from std input or file
+// output: queue of tokens
+
+declare and init delimiter
+declare and set char pointer to strtok()
+create a pointer to a new queue on the heap
+
+while(token is not null)
+	add the token to the queue
+	get the next token
+	
+return <pointer to queue>
+
+
+# parse #
+
+// input: queue of tokens
+// output: pointer to a struct
+// containing necessary information
+// for command execution
+
+create a pointer to new struct command on the heap
+
+while queue is not empty
+	if the first in line is not <, >, >>, |, &
+		cmds[num_cmds] = first in line
+		pop queue
+		int args_count = 0
+		while the current first in line is not <, >, >>, |, & AND the queue is not empty
+			args[num_cmds][args_count] = first in line
+			pop queue
+			args_count++
+		args[num_cmds][args_count] = NULL
+		num_cmds++
+		
+	if the first in line is <
+		if num_cmds == 0 OR pipes
+			return NULL
+		redirect_in = true
+		pop queue
+		if the queue is empty OR the first in line is <, >, >>, |, &
+			return NULL
+		new_in = first in line
+		pop queue
+		
+	if the first in line is >
+		if num_cmds == 0
+			return NULL
+		redirect_out_trunc = true
+		pop queue
+		if the queue is empty OR the first in line is <, >, >>, |, &
+			return null
+		new_out = first in line
+		pop queue
+		
+	if the first in line is >>
+		if num_cmds == 0
+			return NULL
+		redirect_out_app = true
+		pop queue
+		if the queue is empty OR the first in line is <, >, >>, |, &
+			return null
+		new_out = first in line
+		pop queue
+		
+	if the first in line is |
+		if num_cmds == 0
+			return NULL
+		pipes = true
+		pop queue
+		if queue is empty OR the first in line is <, >, >>, |, &
+			return NULL
+		
+	if the first in line is &
+		if num_cmds == 0
+			return NULL
+		background = true
+		pop queue
+		if the queue is not empty
+			return NULL
+
+return <pointer to struct command>
+
+
+# execute #
+
+// input: a command structure
+// output: void
+// executes the command line passed to it
+
+// also sorry, this is barely psuedocode at this point
+// its more like C, but with complete disrespect for syntax
+
+// disclaimer: i have no fucking idea if this will work the way i think it will
+// trigger warning: spaghetti code
+
+// if there are pipes
+if pipes
+	
+	// fork to the FIRST clone
+	pid_t first_clone = fork()
+	
+	// if in the parent
+	if first_clone > 0 AND !background
+		waitpid(clone)
+	
+	// as the first clone
+	// if there is input redirection
+	if redirect_in AND first_clone == 0
+		
+		// redirect the standard input to the new input
+		FILE new_std_in = open(new_in, O_RDONLY)
+		dup2(new_std_in, 0)
+		
+		// at this point, the first cloned process
+		// has the redirected standard input
+		// if applicable
+		
+		// remember the pid of this specific parent
+		int parent_pid = getpid()
+		
+		// for every command in the command line
+		for(int i = 1; i < num_cmds - 1; i++)
+			
+			// create a pipe
+			int fd[2]
+			pipe(fd)
+			
+			// and create a new process again
+			clone = fork()
+			
+			// if we are still in the parent
+			if getpid() == parent_pid
+				
+				// close the parent's input side of the pipe
+				close(fd[0])
+				
+				// and change the parents std output
+				// to the ouput side of the pipe
+				dup2(fd[1], 1)
+				
+				// execute the command
+				cmd_execute(cmd[i], args[i])
+			
+			// if we are in the child
+			if clone == 0
+				
+				// close the child's input side of the pipe
+				close(fd[1])
+				
+				// and set the child's std input
+				// to the input side of the pipe
+				dup2(fd[0], 0)
+				
+				// designate this process as the new parent process
+				parent_pid = getpid()
+				
+				// if this child's parent is executing the last command
+				if i == num_cmds - 2
+					
+					// if we're doing output redirection and replacing a file's contents
+					if redirect_out_trunc
+					
+						// replace the std output with the output file in "w" mode
+						FILE new_std_out = fopen(new_out, O_WRONLY | O_CREAT | O_TRUNC)
+						dup2(new_std_out, 1)
+					
+					// if we're doing output redirection and appending
+					if redirect_out_app
+					
+						// replace the standard ouput with the output file in "a" mode
+						FILE new_std_out = fopen(new_out, O_WRONLY | O_CREAT | O_APPEND)
+						dup2(new_std_out, 1)
+					
+					// execute the final command in the command line
+					cmd_execute(cmd[num_cmd-1], args[num_cmd-1]
+
+else
+	// clone the process
+	pid_t clone = fork()
+	
+	// if we're in the parent
+	if clone > 0 AND !background
+		waitpid(clone)
+	
+	// if we're in the clone
+	if clone == 0
+	
+		// if we're doing input redirection
+		if input_redirection
+			// redirect the standard input to the new input
+			FILE new_std_in = open(new_in, O_RDONLY)
+			dup2(new_std_in, 0)
+			
+		// if we're doing output redirection and replacing a file's contents
+		if redirect_out_trunc
+					
+			// replace the std output with the output file in "w" mode
+			FILE new_std_out = fopen(new_out, O_WRONLY | O_CREAT | O_TRUNC)
+			dup2(new_std_out, 1)
+					
+		// if we're doing output redirection and appending
+		if redirect_out_app
+					
+			// replace the standard ouput with the output file in "a" mode
+			FILE new_std_out = fopen(new_out, O_WRONLY | O_CREAT | O_APPEND)
+			dup2(new_std_out, 1)
+		
+		// lastly, execute the command
+		cmd_execute(cmd[0], args[0])
+
+
+# cmd_execute #
+
+// input: char* cmd (the command), char* cmarg[] (arguments, read phonetically as shmarg)
+// output: completes command execution
+
+// check for built in command
+bool built_in = false
+int j;
+for(j = 0; j < 8; j++)
+	builtin = strcmp(cmd, built_in_cmd[j])
+	if built_in
+		break
+
+// if the command is not a built-in command
+if !builtin
+	// execute the command
+	execvp(cmd, cmargs)
+
+// else helper function will call the command for us
+else
+	switch j
+	case 0: cd(cmargs)
+		break
+	case 1: clr()
+		break
+	case 2: dir(cmargs)
+		break
+	case 3: environ()
+		break
+	case 4: echo(cmargs)
+		break
+	case 5: help()
+		break
+	case 6: pause()
+		break
+	case 7: quit()
+		break
+	
+
+# built it functions #
+
+# cd #
+
+// input: char *directory
+// output: nothing, makes a system call to change current working directory
+
+if chdir(directory) == 0
+	change the prompt to reflect the change
+
+
+# clr #
+
+WE CALL UPON THOU OH YE GODS OF REGEX
+THOUGH YOUR WAYS BE UNKNOWN TO US
+WE BESEECH THEE FOR THINE BLESSING
+
+(/'.')/ "\033[H\033[2J" \('.'\)
+
+
+# dir #
+
+// input: char *directory (this will be args[0])
+// output: prints contents of the current directory to the std output
+
+if argument list is empty
+	directory = get_current_dir_name()
+else
+	directory = args[0]
+Dir *dir = opendir(directory)
+struct dirent *d
+while (d = readdir(directory)) != NULL
+	print the contents of *d
+deallocate directory
+
+
+# environ #
+
+// lists some environment variables
+
+print getenv("USER")
+print getenv("PATH")
+print getenv("SHELL")
+
+
+# echo #
+
+// ECHO!
+
+char *k
+while k != null
+	print strcat(args[k], " ")
+	k++
+
+
+# help #
+
+// prints the readme
+
+FILE readme = open("readme.txt", RONLY)
+char **s
+
+print a new line
+
+while s != EOF
+	s = getline(s, 0, readme)
+	print **s
+
+print a new line
+
+
+# pause #
+
+// pauses shell until a new line is inputted
+
+
+char *s
+
+while s != '\n'
+	s = getchar()
+	
+	
+# quit #
+
+// exits the shell
+
+exit(0)
