@@ -36,30 +36,29 @@ int main(int argc, char **argv)
         FILE *batchcmd = fopen(argv[1], "r");
         char *line = (char *)malloc(500 * sizeof(char));
         size_t buffersize = 500 * sizeof(char);
-
-        fgets(line, buffersize, batchcmd);
-
-        std::queue<char *> *arglist = tokenize(strlen(line), line);
-
-        std::queue<struct command *> *cmdqueue = parse(arglist);
-        delete arglist;
+        std::queue<char *> *arglist;
+        std::queue<struct command *> *cmdqueue;
 
         while (!feof(batchcmd))
         {
-            free(line);
-            line = (char *)malloc(500 * sizeof(char));
             fgets(line, buffersize, batchcmd);
 
             arglist = tokenize(strlen(line), line);
-
             cmdqueue = parse(arglist);
-            delete arglist;
 
-            delete cmdqueue;
+            if (cmdqueue == NULL)
+                std::cout << "Invalid command" << std::endl;
+
+            else
+            {
+                executecmd(cmdqueue);
+            }
         }
-
         free(line);
+        delete arglist;
+        delete cmdqueue;
         delete batchcmd;
     }
+
     return 0;
 }

@@ -31,6 +31,11 @@ std::queue<struct command *> *parse(std::queue<char *> *alist)
             cmd->rdr_in_path = word;
             alist->pop();
             word = alist->front();
+
+            if (word == NULL)
+            {
+                break;
+            }
         }
 
         // check for output redirection argument
@@ -50,12 +55,6 @@ std::queue<struct command *> *parse(std::queue<char *> *alist)
 
             if (word == NULL)
                 break;
-
-            cmd = new struct command;
-            clist->push(cmd);
-            cmd->name = word;
-            alist->pop();
-            word = alist->front();
         }
 
         // check for pipe argument
@@ -83,6 +82,11 @@ std::queue<struct command *> *parse(std::queue<char *> *alist)
             cmd->pipe_in = true;
             alist->pop();
             word = alist->front();
+
+            if (word == NULL)
+            {
+                break;
+            }
         }
 
         // check for background processing argument
@@ -100,6 +104,11 @@ std::queue<struct command *> *parse(std::queue<char *> *alist)
             cmd->name = word;
             alist->pop();
             word = alist->front();
+
+            if (word == NULL)
+            {
+                break;
+            }
         }
 
         // list the command arguments
