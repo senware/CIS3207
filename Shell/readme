@@ -1,0 +1,56 @@
+README
+
+Welcome to the most useless shell you could possibly use.
+
+It functions similarly to bash, but with far fewer features.
+
+You can execute any external command you want,
+assuming you don't want to call it from your shell of choice directly,
+like a sane person.
+
+It supports pipes, the same way bash does, by typing a | character between commands,
+like so:
+    ls | wc -l
+Use these to have your program print to another program instead of the terminal
+
+You can also chain together commands, like:
+    ls >> w.txt & wc w.txt
+
+As a bonus feature, this shell also supports combinations of these functions
+    command < inputfile | command & command & command >> outputfile
+It does not, however, allow for chained pipes, as I did not have enough time to implement them.
+
+You can also redirect the input and output of your commands:
+    Input Redirection:
+    (read from a file instead of the terminal)
+        command < input_file
+    Output Redirection:
+    (print to a file instead of the terminal)
+        Appending:
+        (add to an existing file)
+            command >> output_file
+        Truncating:
+        (erase and replace)
+            command > output_file
+        If the file you specify does not exist, the shell will create it for you in both cases. Neat.
+
+cd and quit (built in commands) do not support these features, but they are the only ones not to.
+
+Built in commands will override your shell's built-ins.
+A full list of built in commands are as follows:
+    cd: changes the working directory of this shell (not bash)
+    dir: prints the contents of the specified directory, or the current directory if none is specified
+    clr: clears the terminal (poorly)
+    environ: prints the current user, the PATH variable and the current shell
+        (will report it as the shell you launched it from)
+    echo: prints the arguments back to you on the next line
+    help: prints this readme to the terminal
+    pause: pauses program execution until Enter is pressed
+    quit: returns you to bash (or your shell of choice really)
+        realistically the only command you'd want to use
+
+If you'd like to, you can also run the shell in batch mode.
+Simply include the filename of your batch file as a single argument.
+This will loop through every line in the file and execute them as if they were entered
+from the terminal one after another.
+    ./myshell batchfile.txt

@@ -1,59 +1,88 @@
 #include "shell_func.h"
 
-const char *prompt = "myshell";
-
 int main(int argc, char **argv)
 {
+    const char *prompt = "myshell";
+
+    // command line mode
     if (argc == 1)
     {
-        while (1)
-        {
-            std::cout << prompt << ">> ";
-
-            char *line = (char *)malloc(500 * sizeof(char));
-            size_t buffersize = 500 * sizeof(char);
-            fgets(line, buffersize, stdin);
-
-            std::queue<char *> *arglist = tokenize(strlen(line), line);
-
-            std::queue<struct command *> *cmdqueue = parse(arglist);
-
-            if (cmdqueue == NULL)
-                std::cout << "Invalid command" << std::endl;
-
-            else
-            {
-                executecmd(cmdqueue);
-            }
-
-            delete arglist;
-            delete cmdqueue;
-            free(line);
-        }
-    }
-    else
-    {
-        FILE *batchcmd = fopen(argv[1], "r");
-        char *line = (char *)malloc(500 * sizeof(char));
-        size_t buffersize = 500 * sizeof(char);
         std::queue<char *> *arglist;
         std::queue<struct command *> *cmdqueue;
 
+        while (1)
+        {
+            // print out command prompt
+            std::cout << prompt << ">> ";
+
+            // allocate memory for command line to be read
+            char *line = (char *)malloc(500 * sizeof(char));
+            size_t buffersize = 500 * sizeof(char);
+
+            // get a line from the terminal
+            fgets(line, buffersize, stdin);
+
+            // remove newline character
+            char *newline = strchr(line, '\n');
+            if (newline != NULL)
+                *newline = '\0';
+
+            if (line != NULL)
+            {
+
+                // split the command into tokens
+                arglist = tokenize(strlen(line), line);
+
+                // create a queue of commands from the list of tokens
+                cmdqueue = parse(arglist);
+
+                // if input validation succeeded, execute the command line
+                if (cmdqueue != NULL)
+                    executecmd(cmdqueue);
+            }
+
+            // clean up
+            free(line);
+        }
+        delete arglist;
+        delete cmdqueue;
+    }
+
+    // run the shell in batch mode
+    else
+    {
+        // file to read commands from
+        FILE *batchcmd = fopen(argv[1], "r");
+
+        // allocate memory for command to be read
+        char *line = (char *)malloc(500 * sizeof(char));
+        size_t buffersize = 500 * sizeof(char);
+
+        // initialize queues
+        std::queue<char *> *arglist;
+        std::queue<struct command *> *cmdqueue;
+
+        // pretty much does the same thing as command line mode
+        // just for every line in the batch file instead
         while (!feof(batchcmd))
         {
             fgets(line, buffersize, batchcmd);
 
-            arglist = tokenize(strlen(line), line);
-            cmdqueue = parse(arglist);
+            char *newline = strchr(line, '\n');
+            if (newline != NULL)
+                *newline = '\0';
 
-            if (cmdqueue == NULL)
-                std::cout << "Invalid command" << std::endl;
-
-            else
+            if (line != NULL)
             {
-                executecmd(cmdqueue);
+                arglist = tokenize(strlen(line), line);
+                cmdqueue = parse(arglist);
+
+                if (cmdqueue != NULL)
+                    executecmd(cmdqueue);
             }
         }
+
+        // clean up
         free(line);
         delete arglist;
         delete cmdqueue;

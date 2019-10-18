@@ -1,0 +1,6 @@
+badcommand |
+this fails too < >
+andthis aswell >> |
+> this doesnt work
+| nor does this
+you | cant | have more than one pipe

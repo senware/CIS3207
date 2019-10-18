@@ -1,3 +1,4 @@
-ls > w.txt & wc w.txt
+ls >> w.txt & wc w.txt
 ls | wc -l
 wc -l < w.txt
+ls | grep cpp > grepoutfile.txt & echo list of cpp files generated in grepoutfile.txt
