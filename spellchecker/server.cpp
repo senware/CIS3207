@@ -5,23 +5,26 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <pthread.h>
 
 #include "dictionary.h"
 #include "circular_queue.h"
 
-#define THREADS 5
+#define THREADS 10
 
 // global //
 
 // sets sockaddr pointer to simplified version (either ipv4 or ipv6)
-// to be honest i really dont fully understand how all of the network stuff works
 void *get_in_addr(struct sockaddr *);
 
 // allocate memory for queues
 circular_queue<int> *socket_queue = new circular_queue<int>();
-circular_queue<const char *> *log_queue = new circular_queue<const char *>();
+circular_queue<char *> *log_queue = new circular_queue<char *>();
+
+// log file
+int log_file = open("log", O_WRONLY | O_CREAT | O_APPEND, S_IRWXG | S_IRWXO | S_IRWXU);
 
 // dictionary pointer
 std::unordered_set<std::string> *dictionary = new std::unordered_set<std::string>();
@@ -34,10 +37,13 @@ pthread_cond_t *sock_empty = (pthread_cond_t *)malloc(sizeof(pthread_cond_t));
 pthread_cond_t *log_avail = (pthread_cond_t *)malloc(sizeof(pthread_cond_t));
 pthread_cond_t *log_empty = (pthread_cond_t *)malloc(sizeof(pthread_cond_t));
 
+// prepare threads, locks and conditions
 void init_threads(pthread_t **, pthread_t **);
 
 void *worker_function(void *);
 void *logger_function(void *);
+
+char *trim(char *);
 
 // end global //
 
@@ -58,8 +64,10 @@ int main(int argc, char **argv)
         load_dictionary(dictionary, argv[1]);
     }
     std::unordered_set<std::string>::iterator it = dictionary->begin();
-    std::cout << "Dictionary successfully loaded." << std::endl
-              << "Starts at: " << *it << " and has size: " << dictionary->size() << std::endl;
+    std::cout << "Dictionary successfully loaded." << std::endl;
+
+    // DEBUG
+    // std::cout << "Starts at: " << *it << " and has size: " << dictionary->size() << std::endl;
 
     //
     //
@@ -145,9 +153,12 @@ int main(int argc, char **argv)
         }
         // put the socket on the queue
         socket_queue->push(sock);
-        std::cout << "Socket " << sock << " placed on queue." << std::endl
-                  << "Queue size: " << socket_queue->get_size() << std::endl;
+
+        // DEBUG
+        // std::cout << "Socket " << sock << " placed on queue." << std::endl
+        //           << "Queue size: " << socket_queue->get_size() << std::endl;
         // signal that there is a socket on the queue
+
         pthread_cond_signal(sock_avail);
         // release the lock
         pthread_mutex_unlock(sock_lock);
@@ -158,10 +169,13 @@ int main(int argc, char **argv)
             continue;
         }
 
+        // convert ip address to string
         inet_ntop(incoming.ss_family, get_in_addr((struct sockaddr *)&incoming), ipstring, sizeof(ipstring));
         std::cout << "Connection from: " << ipstring << std::endl;
     }
 
+    // program ends here
+    // can really only end it with ctrl+C in terminal
     freeaddrinfo(servinfo);
     delete dictionary;
     return 0;
@@ -171,6 +185,7 @@ int main(int argc, char **argv)
 //
 // FUNCTION DEFINITIONS
 //
+// sets sockaddr pointer to simplified version (either ipv4 or ipv6)
 void *get_in_addr(struct sockaddr *sa)
 {
     if (sa->sa_family == AF_INET)
@@ -180,8 +195,18 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6 *)sa)->sin6_addr);
 }
 
+// prepare threads, locks and conditions
 void init_threads(pthread_t **worker_thread, pthread_t **logger_thread)
 {
+    // initialize locks and condition variables
+    // MUST COME FIRST, BEFORE THREAD INITIALIZATIONS
+    pthread_mutex_init(sock_lock, NULL);
+    pthread_mutex_init(log_lock, NULL);
+    pthread_cond_init(sock_avail, NULL);
+    pthread_cond_init(sock_empty, NULL);
+    pthread_cond_init(log_avail, NULL);
+    pthread_cond_init(log_empty, NULL);
+
     // allocate memory to threads and initialize them
     for (int i = 0; i < THREADS; i++)
     {
@@ -190,23 +215,19 @@ void init_threads(pthread_t **worker_thread, pthread_t **logger_thread)
         pthread_create(worker_thread[i], NULL, &worker_function, NULL);
         pthread_create(logger_thread[i], NULL, &logger_function, NULL);
     }
-
-    // initialize locks and condition variables
-    pthread_mutex_init(sock_lock, NULL);
-    pthread_mutex_init(log_lock, NULL);
-    pthread_cond_init(sock_avail, NULL);
-    pthread_cond_init(sock_empty, NULL);
-    pthread_cond_init(log_avail, NULL);
-    pthread_cond_init(log_empty, NULL);
 }
 
+// the serving part of the server
 void *worker_function(void *args)
 {
     while (true)
     {
         // acquire lock
         pthread_mutex_lock(sock_lock);
-        std::cout << "lock acquired" << std::endl;
+
+        // DEBUG
+        // std::cout << "lock acquired" << std::endl;
+
         // while the queue is empty
         while (socket_queue->empty())
         {
@@ -215,8 +236,11 @@ void *worker_function(void *args)
         }
         // grab a connection off of the queue
         int sock = socket_queue->pop();
-        std::cout << "Socket " << sock << " removed from queue." << std::endl
-                  << "Queue size: " << socket_queue->get_size() << std::endl;
+
+        // DEBUG
+        // std::cout << "Socket " << sock << " removed from queue." << std::endl
+        //           << "Socket queue size: " << socket_queue->get_size() << std::endl;
+
         // signal that there is an open spot in the queue
         pthread_cond_signal(sock_empty);
         // release the lock
@@ -228,60 +252,146 @@ void *worker_function(void *args)
             std::cerr << "Failed to send message: " << errno << std::endl;
         }
 
-        size_t buffer_size = 60 * sizeof(char);
-        char *word = (char *)malloc(buffer_size);
         while (true)
         {
+            // if i free this buffer, it becomes empty on the log queue as well
+            // sooooooooooo
+            // oh well
+            size_t buffer_size = 50 * sizeof(char);
+            char *word = (char *)malloc(buffer_size);
+
+            // prompt
             msg = "Spellcheck>> ";
 
+            // send prompt
             int status = send(sock, msg, strlen(msg), 0);
             if (status == -1)
             {
                 std::cerr << "Failed to send message: " << errno << std::endl;
             }
-            // if the connection is lost, end the loop
+            // if the connection is lost, end service to socket
             if (status == 0)
             {
                 break;
             }
 
+            // get input from client
             status = recv(sock, word, buffer_size, 0);
             if (status == -1)
             {
                 std::cerr << "Failed to receive message: " << errno << std::endl;
             }
+            // if the connection is lost, end service to socket
+            if (status == 0)
+            {
+                break;
+            }
 
-            // remove newline characters
-            char *ws = strchr(word, '\n');
-            if (ws != NULL)
-                *ws = '\0';
+            // remove whitespace characters
+            // why do received strings have so much nonsense attached?
+            // carriage return? really?
+            word = trim(word);
 
             // quit if client requests
+            // if they can't spell quit then they need to get help from someone else
             if (strcmp(word, "quit") == 0)
             {
                 break;
             }
 
-            // DEBUGGING //
-            std::cout << word << std::endl;
+            // convert to cpp string and check if in dictionary
+            // append proper result to c string
             std::string w(word);
-            std::cout << w << std::endl;
-            strcat(word, " OK\n");
-            printf("Result: %s", word);
+            if (dictionary->find(w) != dictionary->end())
+                strcat(word, " OK\n");
+            else
+            {
+                strcat(word, " MISSPELLED\n");
+            }
+
             if (send(sock, word, strlen(word), 0) == -1)
             {
                 std::cerr << "Failed to send message: " << errno << std::endl;
             }
+
+            // put result on the log queue
+            // acquire lock
+            pthread_mutex_lock(log_lock);
+            // wait until buffer has an empty space
+            while (log_queue->full())
+            {
+                pthread_cond_wait(log_empty, log_lock);
+            }
+            // place word on the log queue
+            log_queue->push(word);
+
+            // DEBUG
+            // std::cout << word << " placed on log queue." << std::endl
+            //           << "Log queue size: " << log_queue->get_size() << std::endl;
+
+            // signal that there is a log entry on the buffer
+            pthread_cond_signal(log_avail);
+            // release the lock
+            pthread_mutex_unlock(log_lock);
         }
-        free(word);
+        // close unused file descriptor
         close(sock);
     }
 }
 
+// logs results from worker threads to file
 void *logger_function(void *args)
 {
     while (true)
     {
-        ;
+        // create a buffer to hold log entry
+        size_t buffer_size = 50 * sizeof(char);
+        char *line = (char *)malloc(buffer_size);
+
+        // acquire the lock
+        pthread_mutex_lock(log_lock);
+        // wait for something to be placed on the queue
+        while (log_queue->empty())
+        {
+            pthread_cond_wait(log_avail, log_lock);
+        }
+        // remove log entry from queue and place it in the buffer
+        line = log_queue->pop();
+
+        // DEBUG
+        // std::cout << line << " removed from log queue." << std::endl
+        //           << "Log queue size: " << log_queue->get_size() << std::endl;
+
+        // signal that there is space in the queue
+        pthread_cond_signal(log_empty);
+        // release the lock
+        pthread_mutex_unlock(log_lock);
+
+        // write the log entry to the log file
+        write(log_file, line, strlen(line));
+        free(line);
     }
+}
+
+// trim strings of annoying white space
+char *trim(char *input)
+{
+    char *new_str = (char *)malloc(strlen(input));
+    // position in new string
+    int letter = 0;
+    // position in old string
+    char *p = input;
+    // iterate through old string
+    for (p; *p != '\0'; p++)
+    {
+        // ignore white space
+        if (isspace(*p))
+            continue;
+        // if not a white space character, append it to the new string
+        new_str[letter] = *p;
+        letter++;
+    }
+    // add terminating byte
+    new_str[letter] = '\0';
+    return new_str;
 }

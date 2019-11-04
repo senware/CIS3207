@@ -11,8 +11,8 @@ private:
 
 public:
     circular_queue();
-    int pop();
-    int push(int);
+    T pop();
+    T push(T);
     bool empty();
     bool full();
     int get_size();
@@ -27,16 +27,16 @@ circular_queue<T>::circular_queue()
 }
 
 template <typename T>
-int circular_queue<T>::pop()
+T circular_queue<T>::pop()
 {
-    int ret = buffer[front];
+    T ret = buffer[front];
     front = (front + 1) % SIZE;
     size--;
     return ret;
 }
 
 template <typename T>
-int circular_queue<T>::push(int item)
+T circular_queue<T>::push(T item)
 {
     buffer[back] = item;
     back = (back + 1) % SIZE;
