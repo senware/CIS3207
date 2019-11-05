@@ -303,7 +303,6 @@ void *worker_function(void *args)
             status = recv(sock, &errbuff, sizeof(errbuff), MSG_DONTWAIT);
             if (status == 0)
             {
-                close(sock);
                 break;
             }
             // if i free this buffer, it becomes empty on the log queue as well
