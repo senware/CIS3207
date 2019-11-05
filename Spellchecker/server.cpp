@@ -178,8 +178,8 @@ int main(int argc, char **argv)
         socket_queue->push(sock);
 
         // DEBUG
-        std::cout << "Socket " << sock << " placed on queue." << std::endl
-                  << "Queue size: " << socket_queue->get_size() << std::endl;
+        // std::cout << "Socket " << sock << " placed on queue." << std::endl
+        //           << "Queue size: " << socket_queue->get_size() << std::endl;
 
         // signal that there is a socket on the queue
         pthread_cond_signal(sock_avail);
@@ -262,8 +262,8 @@ void *worker_function(void *args)
         int sock = socket_queue->pop();
 
         // DEBUG
-        std::cout << "Socket " << sock << " removed from queue." << std::endl
-                  << "Socket queue size: " << socket_queue->get_size() << std::endl;
+        // std::cout << "Socket " << sock << " removed from queue." << std::endl
+        //           << "Socket queue size: " << socket_queue->get_size() << std::endl;
 
         // signal that there is an open spot in the queue
         pthread_cond_signal(sock_empty);
@@ -299,13 +299,12 @@ void *worker_function(void *args)
 
         while (true)
         {
-
+            // same as above, but breaks this loop
             status = recv(sock, &errbuff, sizeof(errbuff), MSG_DONTWAIT);
             if (status == 0)
             {
-                std::cerr << "Client disconnected violently and rudely." << std::endl;
                 close(sock);
-                continue;
+                break;
             }
             // if i free this buffer, it becomes empty on the log queue as well
             // sooooooooooo
