@@ -13,9 +13,9 @@ void load_dictionary(std::unordered_set<std::string> *dictionary, const char *fi
 {
     std::fstream *dfile = new std::fstream(filename);
 
-    if (dfile == NULL)
+    if (!dfile->is_open())
     {
-        std::cout << "Dictionary file not found." << std::endl;
+        std::cerr << "Dictionary file not found: " << filename << "." << std::endl;
         exit(5);
     }
 

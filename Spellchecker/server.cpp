@@ -49,6 +49,8 @@ char *trim(char *);
 
 int main(int argc, char **argv)
 {
+    // port to listen on (8888 is default)
+    const char *port = "8888";
 
     //
     //
@@ -59,9 +61,31 @@ int main(int argc, char **argv)
     {
         load_dictionary(dictionary);
     }
-    else
+    // if 1 argument is provided
+    else if (argc == 2)
     {
-        load_dictionary(dictionary, argv[1]);
+        // check if it's a dictionary filename
+        if (isalpha(argv[1][0]))
+            load_dictionary(dictionary, argv[1]);
+        // otherwise it must be a port
+        else
+            port = argv[1];
+    }
+    // if 2 arguments are given
+    else if (argc == 3)
+    {
+        // if the first argument is the dictionary filename
+        if (isalpha(argv[1][0]))
+        {
+            load_dictionary(dictionary, argv[1]);
+            port = argv[2];
+        }
+        // if the first argument is the port number
+        else
+        {
+            load_dictionary(dictionary, argv[2]);
+            port = argv[1];
+        }
     }
     std::unordered_set<std::string>::iterator it = dictionary->begin();
     std::cout << "Dictionary successfully loaded." << std::endl;
@@ -91,8 +115,6 @@ int main(int argc, char **argv)
     // use local ip address
     hints.ai_flags = AI_PASSIVE;
 
-    // port to listen on
-    const char *port = "8888";
     // get server info struct from hints struct
     if (int status = getaddrinfo(NULL, port, &hints, &servinfo) != 0)
     {
@@ -136,7 +158,8 @@ int main(int argc, char **argv)
     //
     // MAIN LOOP
     //
-    std::cout << "Awaiting connections..." << std::endl;
+    std::cout << "Listening on port " << port << "." << std::endl
+              << "Awaiting connections..." << std::endl;
     while (true)
     {
         socksize = sizeof(incoming);
@@ -155,10 +178,10 @@ int main(int argc, char **argv)
         socket_queue->push(sock);
 
         // DEBUG
-        // std::cout << "Socket " << sock << " placed on queue." << std::endl
-        //           << "Queue size: " << socket_queue->get_size() << std::endl;
-        // signal that there is a socket on the queue
+        std::cout << "Socket " << sock << " placed on queue." << std::endl
+                  << "Queue size: " << socket_queue->get_size() << std::endl;
 
+        // signal that there is a socket on the queue
         pthread_cond_signal(sock_avail);
         // release the lock
         pthread_mutex_unlock(sock_lock);
@@ -238,8 +261,8 @@ void *worker_function(void *args)
         int sock = socket_queue->pop();
 
         // DEBUG
-        // std::cout << "Socket " << sock << " removed from queue." << std::endl
-        //           << "Socket queue size: " << socket_queue->get_size() << std::endl;
+        std::cout << "Socket " << sock << " removed from queue." << std::endl
+                  << "Socket queue size: " << socket_queue->get_size() << std::endl;
 
         // signal that there is an open spot in the queue
         pthread_cond_signal(sock_empty);
@@ -247,10 +270,31 @@ void *worker_function(void *args)
         pthread_mutex_unlock(sock_lock);
 
         const char *msg = "Connection succesful.\n";
-        if (send(sock, (const char *)msg, strlen(msg), 0) == -1)
+        int status = send(sock, (const char *)msg, strlen(msg), 0);
+        if (status == -1)
         {
             std::cerr << "Failed to send message: " << errno << std::endl;
+            close(sock);
+            continue;
         }
+
+        // for the odd case where a client terminates connection while still waiting in the queue
+        int errbuff;
+        // ping the client without waiting for a reply
+        // normally would set status to -1
+        status = recv(sock, &errbuff, sizeof(errbuff), MSG_DONTWAIT);
+        if (status == 0)
+        {
+            std::cerr << "Client disconnected before client could be served." << std::endl;
+            close(sock);
+            continue;
+        }
+
+        // DEBUG
+        // -1 is normal here, 0 means client has already D/C'd
+        // if the above check works properly, this should appear with a 0 status
+        // instead, the error message above displays, and we reach continue and restart the loop
+        // std::cout << "Status on client : " << status << std::endl;
 
         while (true)
         {
@@ -264,7 +308,8 @@ void *worker_function(void *args)
             msg = "Spellcheck>> ";
 
             // send prompt
-            int status = send(sock, msg, strlen(msg), 0);
+            status = send(sock, msg, strlen(msg), 0);
+            // DEBUG
             if (status == -1)
             {
                 std::cerr << "Failed to send message: " << errno << std::endl;
@@ -335,6 +380,7 @@ void *worker_function(void *args)
             pthread_mutex_unlock(log_lock);
         }
         // close unused file descriptor
+        std::cout << "Client disconnected normally." << std::endl;
         close(sock);
     }
 }
