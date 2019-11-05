@@ -26,13 +26,13 @@ This file has a lot to it, containing the global variables and objects, as well 
 
 Connections are accepted by the main thread, then their file descriptors are placed synchronously on a `circular_queue<queue>`. This is really all this loop does.
 
-### Workers
+### Worker Threads
 
-Connections are synchronously pulled off of the queue, and asynchronously serviced alongside other worker threads. User input is read off of the socket, and compared against the dictionary. The evaluated words are then concatenated with either OK or MISSPELLED and sent back over the socket to the client machine. These results are also synchronously placed on another queue to be processed by the logger threads. ***Clients are serviced continuously in a loop until "quit" is received,*** at which point the loop breaks and the socket file descriptor is closed. ***The loop also breaks if the client disconnects,*** without requesting this explicitly from the server. ***Program execution continues as normal in either case.***
+Connections are synchronously pulled off of the queue, and asynchronously serviced alongside other worker threads. User input is read off of the socket, and compared against the dictionary. The evaluated words are then concatenated with either OK or MISSPELLED and sent back over the socket to the client machine. These results are also synchronously placed on another queue to be processed by the logger threads. **Clients are serviced continuously in a loop until "quit" is received,** at which point the loop breaks and the socket file descriptor is closed. **The loop also breaks if the client disconnects,** without requesting this explicitly from the server. **Program execution continues as normal in either case.**
 
-### Loggers
+### Logger Thread
 
-All the loggers do is synchronously remove worker thread results from the log queue and asynchronously write them to the log file. I considered having the file writing operations also conducted synchronously, but that would be the same as having a single threaded logger. I don't think it matters too much if results are logged slightly out of order. The ***log file is generated at runtime***, and is globally accessible. Entries are always appended, and the log file needs to be either deleted, or erased in a text editor if desired.
+All the logger does is synchronously remove worker thread results from the log queue and write them to the log file. The **log file is generated at runtime**, and is globally accessible. Entries are always appended, and the log file needs to be either deleted, or erased in a text editor if desired.
 
 ## Testing
 

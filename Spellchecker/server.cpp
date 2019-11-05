@@ -38,7 +38,7 @@ pthread_cond_t *log_avail = (pthread_cond_t *)malloc(sizeof(pthread_cond_t));
 pthread_cond_t *log_empty = (pthread_cond_t *)malloc(sizeof(pthread_cond_t));
 
 // prepare threads, locks and conditions
-void init_threads(pthread_t **, pthread_t **);
+void init_threads(pthread_t **, pthread_t *);
 
 void *worker_function(void *);
 void *logger_function(void *);
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
     //
     std::cout << "Initializing thread spool..." << std::endl;
     pthread_t *worker_thread[THREADS];
-    pthread_t *logger_thread[THREADS];
+    pthread_t *logger_thread;
     init_threads(worker_thread, logger_thread);
     std::cout << "Thread spool initialized." << std::endl;
 
@@ -219,7 +219,7 @@ void *get_in_addr(struct sockaddr *sa)
 }
 
 // prepare threads, locks and conditions
-void init_threads(pthread_t **worker_thread, pthread_t **logger_thread)
+void init_threads(pthread_t **worker_thread, pthread_t *logger_thread)
 {
     // initialize locks and condition variables
     // MUST COME FIRST, BEFORE THREAD INITIALIZATIONS
@@ -234,10 +234,11 @@ void init_threads(pthread_t **worker_thread, pthread_t **logger_thread)
     for (int i = 0; i < THREADS; i++)
     {
         worker_thread[i] = (pthread_t *)malloc(sizeof(pthread_t));
-        logger_thread[i] = (pthread_t *)malloc(sizeof(pthread_t));
+
         pthread_create(worker_thread[i], NULL, &worker_function, NULL);
-        pthread_create(logger_thread[i], NULL, &logger_function, NULL);
     }
+    logger_thread = (pthread_t *)malloc(sizeof(pthread_t));
+    pthread_create(logger_thread, NULL, &logger_function, NULL);
 }
 
 // the serving part of the server
@@ -404,6 +405,9 @@ void *logger_function(void *args)
         // remove log entry from queue and place it in the buffer
         line = log_queue->pop();
 
+        // write the log entry to the log file
+        write(log_file, line, strlen(line));
+
         // DEBUG
         // std::cout << line << " removed from log queue." << std::endl
         //           << "Log queue size: " << log_queue->get_size() << std::endl;
@@ -413,8 +417,6 @@ void *logger_function(void *args)
         // release the lock
         pthread_mutex_unlock(log_lock);
 
-        // write the log entry to the log file
-        write(log_file, line, strlen(line));
         free(line);
     }
 }
