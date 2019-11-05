@@ -299,6 +299,14 @@ void *worker_function(void *args)
 
         while (true)
         {
+
+            status = recv(sock, &errbuff, sizeof(errbuff), MSG_DONTWAIT);
+            if (status == 0)
+            {
+                std::cerr << "Client disconnected violently and rudely." << std::endl;
+                close(sock);
+                continue;
+            }
             // if i free this buffer, it becomes empty on the log queue as well
             // sooooooooooo
             // oh well
@@ -326,6 +334,7 @@ void *worker_function(void *args)
             if (status == -1)
             {
                 std::cerr << "Failed to receive message: " << errno << std::endl;
+                break;
             }
             // if the connection is lost, end service to socket
             if (status == 0)
