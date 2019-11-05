@@ -12,7 +12,7 @@ Hosts can either launch the server with no argument, a port argument, a dictiona
 
 ## dictionary.h
 
-The dictionary header file contains the function load_dictionary(), which takes either an `std::unordered_set<std::string>` as an argument or both an `unordered_set` and a filename as a `const char*`. It loads the contents of the file into the `unordered_set`. If no filename is specified, it loads from file `words` in the current directory. The `unordered_set` is used to compare user inputs to English words.
+The dictionary header file contains the function load_dictionary(), which takes either an `std::unordered_set<std::string>` as an argument or both an `unordered_set` and a `filename` as a `const char*`. It loads the contents of the file into the `unordered_set`. If no filename is specified, it loads from file `words` in the current directory. The `unordered_set` is used to compare user inputs to English words.
 
 ## circular_queue.h
 
@@ -42,4 +42,6 @@ Debug messages are commented out in the code. The strings sent and received were
 
 ### Deployment
 
-The server was run from my main desktop. Multiple instances of a telnet client were run on my laptop and second desktop, using my local network ip address. I found that when the number of connections exceeded the number of available threads, the extra clients were accepted once the clients currently being serviced disconnected. One of the biggest problems faced occured when any clients awaiting a connection disconnected before they could be picked up by a worker thread. If following this event, another client quit normally, the server would shut down. This was remedied by requesting a response from client machines without waiting for them to reply. Normally this would return us a -1 from a healthy connection, but a 0 meant that the machine had disconnected already. We could continue normal thread operations successfully after catching the error.
+The server was run from my main desktop. Multiple instances of a telnet client were run on my laptop and second desktop, using my local network ip address. I found that when the number of connections exceeded the number of available threads, the extra clients were accepted once the clients currently being serviced disconnected.
+
+One of the biggest problems faced occured when any clients awaiting a connection disconnected before they could be picked up by a worker thread. If following this event, another client quit normally, the server would shut down. This was remedied by requesting a response from client machines without waiting for them to reply. Normally this would return us a -1 from a healthy connection, but a 0 meant that the machine had disconnected already. We could continue normal thread operations successfully after catching the error.
