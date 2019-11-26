@@ -70,8 +70,11 @@ virtual_disk::virtual_disk(const char *name, int capacity)
     // otherwise print a confirmation message with the size of the new disk
     else
     {
-        std::cout << "Disk initialized with size " << bytes / MB << " MB" << std::endl;
+        std::cout << "Disk initialized with size " << bytes / MB << " MB." << std::endl;
     }
+    // remove unnecessary strings from the heap
+    free(diskname);
+    free(buffer);
 }
 
 int virtual_disk::write_block(char buffer[], int buff_size, int block)
