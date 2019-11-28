@@ -1,2 +1,2 @@
-test-vdisk: test.cpp virtual_disk.cpp virtual_disk.h
+test-vdisk: test.cpp virtual_disk.cpp file_system.cpp virtual_disk.h file_system.h
 	g++ -o test-vdisk *.cpp
