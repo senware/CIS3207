@@ -1,5 +1,12 @@
 #include "virtual_disk.h"
-#include <list>
+
+#ifndef FAT
+#define FAT 1
+#endif
+
+#ifndef ROOT
+#define ROOT 17
+#endif
 
 enum file_t
 {
@@ -7,24 +14,46 @@ enum file_t
     V_DIRECTORY
 };
 
-struct vfile
+// file metadata
+struct vnode
 {
+    // name of the file
     const char *filename;
+    // Directory (V_DIRECTORY) or File (V_FILE)
     file_t file_type;
+    // starting block of the file
     int start;
+    // size of the file in blocks
     int file_size;
-    struct vfile *parent;
-    std::list<struct vfile *> *contents;
+    // parent directory of file
+    char *parent;
+    // list of files and directories in this Directory (V_DIRECTORY)
+    // null if vfile is a File (V_FILE)
+    char **contents;
 };
 
+// file structure containing pointer to metadata and the binary of the file
+struct vfile
+{
+    struct vnode *metadata;
+    char *binary;
+};
+
+// FAT entry
 struct entry
 {
+    // 1 if occupied, 0 if block is free
     bool occupied;
+    // location of the block containing next part of the file
+    // -1 if this is the last block in the chain
     int next;
 };
 
 class file_system
 {
+    //
+    // DATA
+
 private:
     // the disk on which the file system is to be mounted
     virtual_disk *disk;
@@ -33,12 +62,30 @@ private:
     // and the second is the next block, -1 for EOF
     entry *ftable;
     // root directory
-    struct vfile *root;
+    struct vnode *root;
+
+    // table for holding file descriptors for open files
+    int file_desc[64];
+
+    //
+    // FUNCTIONS
 
 public:
     // Constructor
     file_system(virtual_disk *);
 
-    //
+    // load existing file system from disk
     void load_fsystem();
+
+    // write metadata to disk
+    int vfs_write(struct vfile *);
+
+private:
+    // write or overwrite FAT on disk
+    int FAT_write(int);
+    // read FAT from disk
+    int FAT_read();
+
+    // returns next free block or -1 if there are no free blocks
+    int next_free_block();
 };

@@ -30,6 +30,10 @@
 #define WRITE 0
 #endif
 
+#ifndef SUPERBLOCK
+#define SUPERBLOCK 0
+#endif
+
 // struct to save disk metadata to disk
 struct disk_save
 {
@@ -73,7 +77,7 @@ public:
                 buff_size: size of the buffer
                 block: which block to write to
     */
-    int write_block(void *, int, int, int);
+    int write_block(char *, int, int, int);
 
     /*
         Helper Function: to be called by file system's read function

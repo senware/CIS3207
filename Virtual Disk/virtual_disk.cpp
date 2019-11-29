@@ -89,7 +89,7 @@ virtual_disk::virtual_disk(const char *name, int capacity)
     free(buffer);
 }
 
-int virtual_disk::write_block(void *buffer, int buff_size, int block, int flag)
+int virtual_disk::write_block(char *buffer, int buff_size, int block, int flag)
 {
     // find location of the block's bytes on the disk
     int offset = (block * this->block_size);
@@ -97,7 +97,7 @@ int virtual_disk::write_block(void *buffer, int buff_size, int block, int flag)
     lseek(this->file_descriptor, offset, SEEK_SET);
 
     // write to disk
-    int bytes = write(this->file_descriptor, (char *)buffer, buff_size);
+    int bytes = write(this->file_descriptor, buffer, buff_size);
     // if the write failed, print to the STDERR and return failure
     if (bytes < 0)
     {
@@ -174,7 +174,7 @@ int virtual_disk::save_disk()
     std::cout << "Saving disk.\nName: " << save->name << "\nFree blocks: " << save->free_blocks << std::endl;
 
     // write the struct to the first block on the disk
-    if (write_block(save, this->block_size, 0, OVERWRITE) == -1)
+    if (write_block((char *)save, this->block_size, SUPERBLOCK, OVERWRITE) == -1)
     {
         std::cerr << "Failed to write disk metadata to disk." << std::endl;
         return -1;
