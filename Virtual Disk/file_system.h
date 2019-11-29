@@ -22,7 +22,7 @@ struct vnode
     // Directory (V_DIRECTORY) or File (V_FILE)
     file_t file_type;
     // starting block of the file
-    int start;
+    int start = -1;
     // size of the file in blocks
     int file_size;
     // parent directory of file
@@ -62,7 +62,7 @@ private:
     // and the second is the next block, -1 for EOF
     entry *ftable;
     // root directory
-    struct vnode *root;
+    struct vfile *root;
 
     // table for holding file descriptors for open files
     int file_desc[64];
@@ -77,8 +77,8 @@ public:
     // load existing file system from disk
     void load_fsystem();
 
-    // write metadata to disk
-    int vfs_write(struct vfile *);
+    // write file to disk
+    void vfs_write(struct vfile *);
 
 private:
     // write or overwrite FAT on disk

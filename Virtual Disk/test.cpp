@@ -6,5 +6,6 @@ int main()
     file_system *testfilesystem = new file_system(testdisk);
     virtual_disk *testdisk2 = new virtual_disk("disk0");
     testfilesystem = new file_system(testdisk2);
+
     return 0;
 }

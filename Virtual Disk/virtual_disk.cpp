@@ -119,6 +119,8 @@ int virtual_disk::write_block(char *buffer, int buff_size, int block, int flag)
         std::cout << "Overwrote " << bytes << " bytes." << std::endl;
     }
 
+    // force disk update
+    sync();
     return 0;
 }
 
