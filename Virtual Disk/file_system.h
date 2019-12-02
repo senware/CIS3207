@@ -18,7 +18,7 @@ enum file_t
 struct vnode
 {
     // name of the file
-    const char *filename;
+    char filename[15];
     // Directory (V_DIRECTORY) or File (V_FILE)
     file_t file_type;
     // starting block of the file
@@ -85,6 +85,8 @@ private:
     int FAT_write(int);
     // read FAT from disk
     int FAT_read();
+    // initializes the FAT
+    void FAT_init(int);
 
     // returns next free block or -1 if there are no free blocks
     int next_free_block();

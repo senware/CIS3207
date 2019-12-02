@@ -9,10 +9,12 @@ file_system::file_system(virtual_disk *disk)
     this->root = (struct vfile *)malloc(sizeof(vfile));
     this->root->metadata = (struct vnode *)malloc(sizeof(vnode));
 
-    // read the FAT into memory
-    FAT_read();
+    if (FAT_read() == -1)
+    {
+        FAT_init(WRITE);
+    }
 
-    // if the disk already has a mounted file system
+    // if the disk already has a file system
     // read the file system's root directory node into memory
     if (ftable[ROOT].occupied)
     {
@@ -20,38 +22,28 @@ file_system::file_system(virtual_disk *disk)
 
         std::cout << "Root directory found. Loading FAT and root directory to memory." << std::endl;
     }
-
     // if the disk's root directory cannot be read
     else
     {
         std::cout << "No root directory found.\nCreating new file system." << std::endl;
 
+        // if ROOT doesnt exist
+        // initialize FAT table
+        FAT_init(WRITE);
+
         // initialize root directory
-        this->root->metadata->filename = "/";
+        strcpy(this->root->metadata->filename, "/");
         this->root->metadata->file_type = V_DIRECTORY;
         this->root->metadata->start = ROOT;
         this->root->metadata->file_size = 0;
         this->root->metadata->parent = NULL;
         this->root->metadata->contents = NULL;
 
-        // initialize FAT table
-        // sets the superblock to occupied at i = 0
-        // sets the block containing the FAT to occupied at i = 1-16
-        // sets the block containing the root directory to occupied at i = 17
-        for (int i = SUPERBLOCK; i <= ROOT; i++)
-        {
-            ftable[i].occupied = 1;
-            ftable[i].next = -1;
-        }
-
-        // Write root directory and FAT to disk
-        FAT_write(WRITE);
-        disk->write_block((char *)this->root->metadata, disk->get_block_size(), this->root->metadata->start, WRITE);
+        // disk->write_block((char *)this->root->metadata, disk->get_block_size(), this->root->metadata->start, WRITE);
+        vfs_write(root);
     }
 
     // DEBUG
-    // vfs_write(root);
-
     std::cout << ftable[this->root->metadata->start].occupied << " " << ftable[this->root->metadata->start].next << std::endl
               << this->root->metadata->filename << std::endl
               << this->root->metadata->file_size << std::endl;
@@ -99,12 +91,22 @@ int file_system::FAT_read()
     return 0;
 }
 
-/*
-    THIS STEAMING HUNK OF HOT GARBAGE IS CURRENTLY HOPELESSLY BROKEN
-    I WILL FUCKING FIX THIS AT A LATER DATE
-    I AM MENTALLY DRAINED AND IT'S THANKSGIVING OR WHATEVER
-    FUCKKKKKKKKKKKK THIS
-*/
+void file_system::FAT_init(int flag)
+{
+    // initialize FAT table
+    ftable = (struct entry *)malloc(sizeof(entry) * disk->get_blocks());
+    // sets the superblock to occupied at i = 0
+    // sets the block containing the FAT to occupied at i = {1, 16}
+    for (int i = SUPERBLOCK; i < ROOT; i++)
+    {
+        ftable[i].occupied = 1;
+        ftable[i].next = -1;
+    }
+
+    // write FAT to disk
+    FAT_write(flag);
+}
+
 void file_system::vfs_write(struct vfile *file)
 {
     // "pointer" for current block
@@ -114,27 +116,33 @@ void file_system::vfs_write(struct vfile *file)
     {
         // set the start location to the next available block
         // set current to the start location
-        current = file->metadata->start = next_free_block();
+        current = file->metadata->start;
 
-        std::cerr << "||||||working so far|||||" << std::flush << std::endl;
         // write the file metadata to disk
         disk->write_block((char *)file->metadata, disk->get_block_size(), current, WRITE);
+
+        // set the FAT at the metadata block to occupied
+        ftable[current].occupied = 1;
+
+        char *buffer = (char *)file->binary;
 
         // for each block of the file, until the second to last block of the file
         for (int i = 0; i < file->metadata->file_size; i++)
         {
-            // set the FAT at the current block to occupied
-            ftable[current].occupied = 1;
             // set the next block to the next available block
             // set current to the next block
             current = ftable[current].next = next_free_block();
+            // set the FAT at the current block to occupied
+            ftable[current].occupied = 1;
             // write the block to disk
-            disk->write_block((char *)&(file->binary[i * disk->get_block_size()]), disk->get_block_size(), current, WRITE);
+            disk->write_block(&buffer[i * disk->get_block_size()], disk->get_block_size(), current, WRITE);
         }
         // set the last block of the file to occupied
         ftable[current].occupied = 1;
         // set this to be the final block of the file
         ftable[current].next = -1;
+        FAT_write(OVERWRITE);
+        return;
     }
 
     // allocate memory for temporary structure to hold past version of file
@@ -142,19 +150,22 @@ void file_system::vfs_write(struct vfile *file)
     disk->read_block(temp, disk->get_block_size(), file->metadata->start);
 
     // if the file has gotten larger (needs more blocks)
-    if (temp->file_size < file->metadata->file_size)
+    if (temp->file_size <= file->metadata->file_size)
     {
         // point to the first block of the old file
         current = temp->start;
         // overwrite the block with the new file version's metadata block
         disk->write_block((char *)file->metadata, disk->get_block_size(), current, OVERWRITE);
+
+        char *buffer = (char *)file->binary;
+
         // for every block in the old file
         for (int i = 0; i < temp->file_size; i++)
         {
             // increment our pointer to the next block
             current = ftable[current].next;
             // overwrite the block with the new file version's block
-            disk->write_block((char *)&(file->binary[i * disk->get_block_size()]), disk->get_block_size(), current, OVERWRITE);
+            disk->write_block(&buffer[i * disk->get_block_size()], disk->get_block_size(), current, OVERWRITE);
         }
         // for every new block, starting with the last block of the old file
         for (int i = temp->file_size; i < file->metadata->file_size; i++)
@@ -165,7 +176,7 @@ void file_system::vfs_write(struct vfile *file)
             // set the new block to occupied in the FAT
             ftable[current].occupied = 1;
             // write the block with the new file version's block
-            disk->write_block((char *)&(file->binary[i * disk->get_block_size()]), disk->get_block_size(), current, WRITE);
+            disk->write_block(&buffer[i * disk->get_block_size()], disk->get_block_size(), current, WRITE);
         }
         // set the final block to be the end of the new (larger) version of the file
         ftable[current].next = -1;
@@ -178,13 +189,16 @@ void file_system::vfs_write(struct vfile *file)
         current = file->metadata->start;
         // overwrite the block with the new file version's metadata block
         disk->write_block((char *)file->metadata, disk->get_block_size(), current, OVERWRITE);
+
+        char *buffer = (char *)file->binary;
+
         // for every block in the new file
         for (int i = 0; i < file->metadata->start; i++)
         {
             // point to the next block of the file
             current = ftable[current].next;
             // overwrite the block with the new file version's block
-            disk->write_block((char *)&(file->binary[i * disk->get_block_size()]), disk->get_block_size(), current, OVERWRITE);
+            disk->write_block(&buffer[i * disk->get_block_size()], disk->get_block_size(), current, OVERWRITE);
         }
         // save a pointer to the last block of the file
         int last_block = current;

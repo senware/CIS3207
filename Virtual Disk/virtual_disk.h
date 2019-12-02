@@ -37,7 +37,7 @@
 // struct to save disk metadata to disk
 struct disk_save
 {
-    const char *name;
+    char name[15];
     u_int32_t capacity;
     int blocks;
     int free_blocks;

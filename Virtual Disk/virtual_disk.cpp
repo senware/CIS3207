@@ -167,7 +167,7 @@ int virtual_disk::save_disk()
     // create save struct
     struct disk_save *save = (struct disk_save *)malloc(sizeof(disk_save));
     // fill struct
-    save->name = this->name;
+    strcpy(save->name, this->name);
     save->capacity = this->capacity;
     save->blocks = this->blocks;
     save->free_blocks = this->free_blocks;
