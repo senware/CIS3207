@@ -9,5 +9,9 @@ int main()
     // file_system *testfilesystem = new file_system(testdisk2);
     testfilesystem = new file_system(testdisk2);
 
+    // testfilesystem->vfs_create("dumbshit.txt");
+    // std::cout << testfilesystem->vfs_search("dumbshit.txt")
+    //           << std::endl;
+
     return 0;
 }

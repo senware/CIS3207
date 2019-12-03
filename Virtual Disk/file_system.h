@@ -4,10 +4,6 @@
 #define FAT 1
 #endif
 
-#ifndef ROOT
-#define ROOT 17
-#endif
-
 enum file_t
 {
     V_FILE,
@@ -25,11 +21,10 @@ struct vnode
     int start = -1;
     // size of the file in blocks
     int file_size;
-    // parent directory of file
-    char *parent;
-    // list of files and directories in this Directory (V_DIRECTORY)
-    // null if vfile is a File (V_FILE)
-    char **contents;
+    // list of file and directory starting blocks in this Directory (V_DIRECTORY)
+    // contents[0] = parent
+    // contents[1] = self
+    char contents[255];
 };
 
 // file structure containing pointer to metadata and the binary of the file
@@ -64,6 +59,9 @@ private:
     // root directory
     struct vfile *root;
 
+    // starting block of the root directory
+    int ROOT;
+
     // table for holding file descriptors for open files
     int file_desc[64];
 
@@ -80,6 +78,11 @@ public:
     // write file to disk
     void vfs_write(struct vfile *);
 
+    // create a new file
+    int vfs_create(const char *);
+    // create a new file in directory
+    int vfs_create(const char *, const char *);
+
 private:
     // write or overwrite FAT on disk
     int FAT_write(int);
@@ -88,6 +91,21 @@ private:
     // initializes the FAT
     void FAT_init(int);
 
+    /*
+        MAKE PRIVATE
+        (after testing)
+    */
+public:
+    // search for directory and file names
+    //returns starting block number for metadata
+    int vfs_search(const char *);
+    int rec_search(const char *, vnode *);
+
+    /*
+        END MAKE PRIVATE
+    */
+
+private:
     // returns next free block or -1 if there are no free blocks
     int next_free_block();
 };

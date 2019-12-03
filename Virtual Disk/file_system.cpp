@@ -5,6 +5,11 @@ file_system::file_system(virtual_disk *disk)
     // initialize disk
     this->disk = disk;
 
+    // reserve memory for the FAT
+    ftable = (struct entry *)malloc(sizeof(entry) * disk->get_blocks());
+
+    ROOT = sizeof(ftable) + 1;
+
     // reserve memory for root directory
     this->root = (struct vfile *)malloc(sizeof(vfile));
     this->root->metadata = (struct vnode *)malloc(sizeof(vnode));
@@ -36,8 +41,9 @@ file_system::file_system(virtual_disk *disk)
         this->root->metadata->file_type = V_DIRECTORY;
         this->root->metadata->start = ROOT;
         this->root->metadata->file_size = 0;
-        this->root->metadata->parent = NULL;
-        this->root->metadata->contents = NULL;
+        this->root->metadata->contents[0] = ROOT;
+        this->root->metadata->contents[1] = ROOT;
+        this->root->metadata->contents[2] = -1;
 
         // disk->write_block((char *)this->root->metadata, disk->get_block_size(), this->root->metadata->start, WRITE);
         vfs_write(root);
@@ -93,8 +99,6 @@ int file_system::FAT_read()
 
 void file_system::FAT_init(int flag)
 {
-    // initialize FAT table
-    ftable = (struct entry *)malloc(sizeof(entry) * disk->get_blocks());
     // sets the superblock to occupied at i = 0
     // sets the block containing the FAT to occupied at i = {1, 16}
     for (int i = SUPERBLOCK; i < ROOT; i++)
@@ -102,11 +106,19 @@ void file_system::FAT_init(int flag)
         ftable[i].occupied = 1;
         ftable[i].next = -1;
     }
+    for (int i = ROOT; i < sizeof(ftable); i++)
+    {
+        ftable[i].occupied = 0;
+        ftable[i].next = -1;
+    }
 
     // write FAT to disk
     FAT_write(flag);
 }
 
+/*
+    NOTE: NEEDS TO BE REDESIGNED TO RETURN AN INTEGER
+*/
 void file_system::vfs_write(struct vfile *file)
 {
     // "pointer" for current block
@@ -138,7 +150,7 @@ void file_system::vfs_write(struct vfile *file)
             disk->write_block(&buffer[i * disk->get_block_size()], disk->get_block_size(), current, WRITE);
         }
         // set the last block of the file to occupied
-        ftable[current].occupied = 1;
+        // ftable[current].occupied = 1;
         // set this to be the final block of the file
         ftable[current].next = -1;
         FAT_write(OVERWRITE);
@@ -217,6 +229,77 @@ void file_system::vfs_write(struct vfile *file)
     // save the updated FAT to disk
     FAT_write(OVERWRITE);
 }
+
+/*
+    START CLUSTERFUCK **************************************************************
+    (needs to be worked on, completely unusable currently)
+*/
+
+int file_system::vfs_create(const char *filename)
+{
+    return vfs_create(filename, "/");
+}
+
+int file_system::vfs_create(const char *file_name, const char *dir_name)
+{
+    // create a new file structure and allocate memory
+    vfile *new_file = (vfile *)malloc(sizeof(vfile));
+
+    // create a new metadata node and allocate memory to it
+    new_file->metadata = (vnode *)malloc(sizeof(vnode));
+    // create a single block sized array to hold file data and allocate memory to it
+    new_file->binary = (char *)malloc(disk->get_block_size() * sizeof(char));
+
+    // fill file metadata
+    strcpy(new_file->metadata->filename, file_name);
+    new_file->metadata->file_type = V_FILE;
+    new_file->metadata->file_size = 1;
+    new_file->metadata->start = next_free_block();
+    new_file->metadata->contents[0] = vfs_search(dir_name);
+    new_file->metadata->contents[1] = new_file->metadata->start;
+
+    // set the first character in the file binary to end of file (-1)
+    new_file->binary[0] = -1;
+
+    vfs_write(new_file);
+
+    return 0;
+}
+
+int file_system::vfs_search(const char *name)
+{
+    int ret = -1;
+    vnode *node = (vnode *)malloc(sizeof(vnode));
+    disk->read_block(node, sizeof(node), ROOT);
+    ret = rec_search(name, node);
+
+    return ret;
+}
+
+int file_system::rec_search(const char *name, vnode *node)
+{
+    int s_block = node->start;
+    if (strcmp(name, node->filename) == 0)
+    {
+        return s_block;
+    }
+
+    char *fileptr = node->contents;
+    s_block = *fileptr;
+    char ret = -1;
+
+    while (s_block != -1)
+    {
+        ret = rec_search(node->filename, node);
+        s_block = *(++fileptr);
+    }
+
+    return ret;
+}
+
+/*
+    END CLUSTERFUCK **********************************************************8
+*/
 
 int file_system::next_free_block()
 {
