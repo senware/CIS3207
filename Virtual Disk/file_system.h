@@ -56,6 +56,7 @@ struct vfile
 {
     struct vnode *metadata;
     char *binary;
+    int offset;
 };
 
 // FAT entry
@@ -74,7 +75,7 @@ class file_system
     // DATA
 
 private:
-    // the disk on which the file system is to be mounted
+    // the disk on which the file system is to be written to
     virtual_disk *disk;
     // an array of tuples
     // for which the first is 1 or 0: 1 for allocated, 0 for unallocated
@@ -86,8 +87,9 @@ private:
     // starting block of the root directory
     int ROOT;
 
-    // table for holding file descriptors for open files
-    int file_desc[64];
+    // table for holding open files
+    vfile *file_desc[64];
+    int num_desc;
 
     //
     // FUNCTIONS
@@ -95,12 +97,6 @@ private:
 public:
     // Constructor
     file_system(virtual_disk *);
-
-    // load existing file system from disk
-    void load_fsystem();
-
-    // write file to disk
-    int vfs_write(struct vfile *);
 
     // create a new file
     int vfs_create(const char *);
@@ -112,13 +108,22 @@ public:
     // create a new directory in directory
     int vfs_mkdir(const char *, const char *);
 
+    // open file, add to open file table, returns file descriptor to file
+    int vfs_open(const char *);
+    // close file, removes file from open file table
+    int vfs_close(int);
+
 private:
+    // load existing file system from disk
+    void load_fsystem();
     // write or overwrite FAT on disk
     int FAT_write(int);
     // read FAT from disk
     int FAT_read();
     // initializes the FAT
     int FAT_init(int);
+    // write file to disk
+    int vfs_write(struct vfile *);
 
     /*
         MAKE PRIVATE

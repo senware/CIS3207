@@ -138,7 +138,6 @@ virtual_disk::virtual_disk(const char *name, int capacity)
     save_disk();
     this->free_blocks--;
 
-    // remove unnecessary strings from the heap
     free(diskname);
     free(buffer);
 }
@@ -163,14 +162,14 @@ int virtual_disk::write_block(char *buffer, int buff_size, int block, int flag)
     {
         // decrement free space
         this->free_blocks--;
+        // if the write succeeded, print how many bytes were written and return success
+        errlog << "Wrote " << bytes << " bytes. At block " << block << "." << std::endl;
         //save disk metadata
         save_disk();
-        // if the write succeeded, print how many bytes were written and return success
-        errlog << "Wrote " << bytes << " bytes." << std::endl;
     }
     if (flag == OVERWRITE)
     {
-        errlog << "Overwrote " << bytes << " bytes." << std::endl;
+        errlog << "Overwrote " << bytes << " bytes. At block " << block << "." << std::endl;
     }
 
     // force disk update
@@ -196,7 +195,7 @@ int virtual_disk::read_block(void *buffer, int buff_size, int block)
     }
 
     // if the read succeeded, print the number of bytes read and return success
-    errlog << "Read " << bytes << " bytes." << std::endl;
+    errlog << "Read " << bytes << " bytes. At block " << block << "." << std::endl;
     return 0;
 }
 
@@ -231,6 +230,7 @@ int virtual_disk::save_disk()
 
     char *buffer = (char *)save;
     // write the struct to the first block on the disk
+    errlog << "   ";
     if (write_block(buffer, sizeof(disk_save), SUPERBLOCK, OVERWRITE) == -1)
     {
         errlog << "Failed to write disk metadata to disk." << std::endl;

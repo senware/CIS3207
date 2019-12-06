@@ -27,11 +27,23 @@ int main()
     */
 
     testfilesystem->vfs_mkdir("subdirectory0");
+    testfilesystem->vfs_mkdir("subsubdirectory", "subdirectory0");
     testfilesystem->vfs_create("dumbshit.txt", "subdirectory0");
-    std::cout << "New directory location: " << testfilesystem->vfs_search("subdirectory0")
-              << std::endl
-              << "New file location: " << testfilesystem->vfs_search("dumbshit.txt")
-              << std::endl;
+    testfilesystem->vfs_create("fuckwad.txt", "subdirectory0");
+    testfilesystem->vfs_create("snorlax.txt", "subsubdirectory");
 
+    /*
+
+        test file open/close
+    */
+
+    int fd0 = testfilesystem->vfs_open("dumbshit.txt");
+    int fd1 = testfilesystem->vfs_open("fuckwad.txt");
+    int fd2 = testfilesystem->vfs_open("snorlax.txt");
+    testfilesystem->vfs_close(fd0);
+    fd0 = testfilesystem->vfs_open("dumbshit.txt");
+    std::cout << "File descriptor fd0: " << fd0 << std::endl
+              << "File descriptor fd1: " << fd1 << std::endl
+              << "File descriptor fd2: " << fd2 << std::endl;
     return 0;
 }
