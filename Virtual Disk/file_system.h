@@ -4,6 +4,30 @@
 #define FAT 1
 #endif
 
+#ifndef END_OF_FILE
+#define END_OF_FILE -1
+#endif
+
+#ifndef END_OF_DIRECTORY
+#define END_OF_DIRECTORY -1
+#endif
+
+#ifndef FREE
+#define FREE 0
+#endif
+
+#ifndef OCCUPIED
+#define OCCUPIED 1
+#endif
+
+#ifndef PARENT
+#define PARENT 0
+#endif
+
+#ifndef SELF
+#define SELF 1
+#endif
+
 enum file_t
 {
     V_FILE,
@@ -14,7 +38,7 @@ enum file_t
 struct vnode
 {
     // name of the file
-    char filename[15];
+    char filename[16];
     // Directory (V_DIRECTORY) or File (V_FILE)
     file_t file_type;
     // starting block of the file
@@ -24,7 +48,7 @@ struct vnode
     // list of file and directory starting blocks in this Directory (V_DIRECTORY)
     // contents[0] = parent
     // contents[1] = self
-    char contents[255];
+    int contents[256];
 };
 
 // file structure containing pointer to metadata and the binary of the file
@@ -76,12 +100,17 @@ public:
     void load_fsystem();
 
     // write file to disk
-    void vfs_write(struct vfile *);
+    int vfs_write(struct vfile *);
 
     // create a new file
     int vfs_create(const char *);
     // create a new file in directory
     int vfs_create(const char *, const char *);
+
+    // create a new directory
+    int vfs_mkdir(const char *);
+    // create a new directory in directory
+    int vfs_mkdir(const char *, const char *);
 
 private:
     // write or overwrite FAT on disk
@@ -89,7 +118,7 @@ private:
     // read FAT from disk
     int FAT_read();
     // initializes the FAT
-    void FAT_init(int);
+    int FAT_init(int);
 
     /*
         MAKE PRIVATE
@@ -99,6 +128,7 @@ public:
     // search for directory and file names
     //returns starting block number for metadata
     int vfs_search(const char *);
+    // recursive loop for vfs_search
     int rec_search(const char *, vnode *);
 
     /*
@@ -108,4 +138,8 @@ public:
 private:
     // returns next free block or -1 if there are no free blocks
     int next_free_block();
+    // add an entry to a directory
+    int add_content(vnode *, int);
+    // remove an entry from a directory
+    int rm_content(vnode *, int);
 };

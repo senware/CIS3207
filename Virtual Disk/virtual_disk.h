@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fstream>
 
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 4096
@@ -60,6 +61,8 @@ private:
     int free_blocks;
 
 public:
+    // for dumping statistics and debugging
+    std::ofstream errlog;
     /*
         Constructor:
             arguments:
@@ -76,6 +79,7 @@ public:
                 buffer: buffer to be written to disk
                 buff_size: size of the buffer
                 block: which block to write to
+                flag: WRITE or OVERWRITE
     */
     int write_block(char *, int, int, int);
 

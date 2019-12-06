@@ -2,20 +2,74 @@
 
 virtual_disk::virtual_disk(const char *name)
 {
+    // prepare log directory and log file for writing
+    char *log_filename = (char *)malloc(strlen(name) + 13);
+    const char *log_folder = "./logs";
+    DIR *directory = opendir(log_folder);
+    // if log directory doesn't exist, create it
+    int status;
+    if (errno == ENOENT)
+    {
+        status = mkdir(log_folder, S_IRWXU | S_IRWXG | S_IRWXO);
+
+        // if creation of the /log directory fails, print and error message and exit
+        if (status == -1)
+        {
+            errlog << "Failed to create directory: " << log_folder << "." << std::endl;
+            exit(1);
+        }
+    }
+    closedir(directory);
+
+    strcpy(log_filename, log_folder);
+    strcat(log_filename, "/");
+    strcat(log_filename, name);
+    strcat(log_filename, ".log");
+
+    errlog.open(log_filename, std::ios::out | std::ios::app);
+    free(log_filename);
+
     if (load_disk(name) == -1)
     {
-        std::cerr << "Creating new disk with name: " << name << "and size 64." << std::endl;
+        errlog << "Creating new disk with name: " << name << "and size 64." << std::endl;
         virtual_disk(name, 64);
     }
     else
     {
-        std::cout << "Loaded disk: " << name << "." << std::endl
-                  << "Space remaining: " << this->free_blocks << " blocks." << std::endl;
+        errlog << "Loaded disk: " << name << "." << std::endl
+               << "Space remaining: " << this->free_blocks << " blocks." << std::endl;
     }
 };
 
 virtual_disk::virtual_disk(const char *name, int capacity)
 {
+    // prepare log directory and log file
+    char *log_filename = (char *)malloc(strlen(name) + 13);
+    const char *log_folder = "./logs";
+    DIR *directory = opendir(log_folder);
+    // if log directory doesn't exist, create it
+    int status;
+    if (errno == ENOENT)
+    {
+        status = mkdir(log_folder, S_IRWXU | S_IRWXG | S_IRWXO);
+
+        // if creation of the /log directory fails, print and error message and exit
+        if (status == -1)
+        {
+            errlog << "Failed to create directory: " << log_folder << "." << std::endl;
+            exit(1);
+        }
+    }
+    closedir(directory);
+
+    strcpy(log_filename, log_folder);
+    strcat(log_filename, "/");
+    strcat(log_filename, name);
+    strcat(log_filename, ".log");
+    // open the log file for writing (new log file)
+    errlog.open(log_filename, std::ios::out | std::ios::trunc);
+    free(log_filename);
+
     // multiply capacity in MB to get capacity in bytes
     this->capacity = capacity * MB;
     // block size is 4096 bytes
@@ -30,9 +84,8 @@ virtual_disk::virtual_disk(const char *name, int capacity)
     // declare string to hold directory name
     const char *path = "./disks";
     // check to see if the directory already exists
-    DIR *directory = opendir(path);
+    directory = opendir(path);
     // if it doesn't exist, create it
-    int status;
     if (errno == ENOENT)
     {
         status = mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -40,10 +93,11 @@ virtual_disk::virtual_disk(const char *name, int capacity)
         // if creation of the /disk directory fails, print and error message and exit
         if (status == -1)
         {
-            std::cerr << "Failed to create directory " << path << "." << std::endl;
+            errlog << "Failed to create directory " << path << "." << std::endl;
             exit(1);
         }
     }
+    closedir(directory);
 
     // copy directory name into a new string that can be concatenated
     char *diskname = (char *)malloc(50);
@@ -58,7 +112,7 @@ virtual_disk::virtual_disk(const char *name, int capacity)
     // if disk creation fails, print and error message and exit
     if (this->file_descriptor < 0)
     {
-        std::cerr << "Failed to create disk." << std::endl;
+        errlog << "Failed to create disk." << std::endl;
         exit(2);
     }
 
@@ -72,13 +126,13 @@ virtual_disk::virtual_disk(const char *name, int capacity)
     // if the write failed, print an error message and exit
     if (bytes < 0)
     {
-        std::cerr << "Disk initialization failure, could not 0 disk." << std::endl;
+        errlog << "Disk initialization failure, could not 0 disk." << std::endl;
         exit(3);
     }
     // otherwise print a confirmation message with the size of the new disk
     else
     {
-        std::cout << "Disk initialized with size " << bytes / MB << " MB." << std::endl;
+        errlog << "Disk initialized with size " << bytes / MB << " MB." << std::endl;
     }
     // write disk metadata to memory
     save_disk();
@@ -99,9 +153,9 @@ int virtual_disk::write_block(char *buffer, int buff_size, int block, int flag)
     // write to disk
     int bytes = write(this->file_descriptor, buffer, buff_size);
     // if the write failed, print to the STDERR and return failure
-    if (bytes < 0)
+    if (bytes <= 0)
     {
-        std::cerr << "Write failed." << std::endl;
+        errlog << "Write failed." << std::endl;
         return -1;
     }
 
@@ -112,15 +166,15 @@ int virtual_disk::write_block(char *buffer, int buff_size, int block, int flag)
         //save disk metadata
         save_disk();
         // if the write succeeded, print how many bytes were written and return success
-        std::cout << "Wrote " << bytes << " bytes." << std::endl;
+        errlog << "Wrote " << bytes << " bytes." << std::endl;
     }
     if (flag == OVERWRITE)
     {
-        std::cout << "Overwrote " << bytes << " bytes." << std::endl;
+        errlog << "Overwrote " << bytes << " bytes." << std::endl;
     }
 
     // force disk update
-    sync();
+    syncfs(this->file_descriptor);
     return 0;
 }
 
@@ -137,12 +191,12 @@ int virtual_disk::read_block(void *buffer, int buff_size, int block)
     // if read fails print to the STDERR and return failure
     if (bytes < 0)
     {
-        std::cerr << "Read failed." << std::endl;
+        errlog << "Read failed." << std::endl;
         return -1;
     }
 
     // if the read succeeded, print the number of bytes read and return success
-    std::cout << "Read " << bytes << " bytes." << std::endl;
+    errlog << "Read " << bytes << " bytes." << std::endl;
     return 0;
 }
 
@@ -156,7 +210,7 @@ int virtual_disk::rm_blocks(int blocks)
     // save disk metadata to disk
     save_disk();
     // force write to disk
-    sync();
+    syncfs(this->file_descriptor);
 
     // return number of deleted blocks
     return blocks;
@@ -173,15 +227,18 @@ int virtual_disk::save_disk()
     save->free_blocks = this->free_blocks;
 
     // DEBUG
-    std::cout << "Saving disk.\nName: " << save->name << "\nFree blocks: " << save->free_blocks << std::endl;
+    errlog << "Saving metadata to superblock.\n   Name: " << save->name << "\n   Free blocks: " << save->free_blocks << std::endl;
 
+    char *buffer = (char *)save;
     // write the struct to the first block on the disk
-    if (write_block((char *)save, this->block_size, SUPERBLOCK, OVERWRITE) == -1)
+    if (write_block(buffer, sizeof(disk_save), SUPERBLOCK, OVERWRITE) == -1)
     {
-        std::cerr << "Failed to write disk metadata to disk." << std::endl;
+        errlog << "Failed to write disk metadata to disk." << std::endl;
         return -1;
     }
 
+    errlog << "Disk metadata saved successfully."
+           << std::endl;
     // return 0 on success
     return 0;
 }
@@ -194,17 +251,18 @@ int virtual_disk::load_disk(const char *name)
     strcpy(path, temp);
     strcat(path, name);
     // attempt to open disk file
-    this->file_descriptor = open(path, O_APPEND | O_RDWR);
+    this->file_descriptor = open(path, O_RDWR, S_IRWXG | S_IRWXO | S_IRWXU);
     // if the disk is not found print an error message and return -1
     if (this->file_descriptor < 0)
     {
-        std::cerr << "Disk file not found." << std::endl;
+        errlog << "Disk file not found." << std::endl;
         return -1;
     }
+    free(path);
 
     // if the disk is found, load the disk's metadata block
     struct disk_save *loaded_disk = (struct disk_save *)malloc(sizeof(disk_save));
-    read_block(loaded_disk, BLOCK_SIZE, 0);
+    read_block(loaded_disk, sizeof(disk_save), SUPERBLOCK);
 
     // and initialize disk object's fields
     this->name = loaded_disk->name;
@@ -213,7 +271,7 @@ int virtual_disk::load_disk(const char *name)
     this->blocks = loaded_disk->blocks;
     this->free_blocks = loaded_disk->free_blocks;
 
-    std::cout << "Disk metadata loaded into memory." << std::endl;
+    errlog << "Disk metadata loaded into memory." << std::endl;
     // return 0 on success
     return 0;
 }
