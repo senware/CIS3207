@@ -1,2 +1,2 @@
-testdisk: test.cpp virtual_disk.cpp file_system.cpp vfs_open.cpp vfs_create.cpp search.cpp FAT.cpp vfs_write.cpp virtual_disk.h file_system.h
+testdisk: test.cpp virtual_disk.cpp file_system.cpp vfs_open-close.cpp vfs_create-mkdir.cpp search.cpp FAT.cpp vfs_write-read.cpp vfs_rm.cpp utilities.cpp virtual_disk.h file_system.h
 	g++ -o testdisk *.cpp

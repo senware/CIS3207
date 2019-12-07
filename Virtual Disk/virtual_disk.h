@@ -72,6 +72,8 @@ public:
     virtual_disk(const char *, int);
     // Constructor for loading existing disk
     virtual_disk(const char *name);
+    // Destructor to close file descriptors
+    ~virtual_disk();
 
     /*
         Helper Function: to be called by file system's write function
@@ -114,7 +116,7 @@ public:
 
     // returns name of disk
     const char *get_name() { return this->name; }
-    // returns total disk capacity
+    // returns total disk capacity in bytes
     u_int32_t get_capacity() { return this->capacity; }
     // returns block size in bytes
     int get_block_size() { return this->block_size; }

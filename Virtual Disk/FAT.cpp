@@ -1,5 +1,10 @@
 #include "file_system.h"
 
+/*
+    *********
+    FAT_write
+*/
+
 int file_system::FAT_write(int flag)
 {
     disk->errlog << "Attempting to save FAT to disk." << std::endl;
@@ -23,6 +28,11 @@ int file_system::FAT_write(int flag)
     return 0;
 }
 
+/*
+    ********
+    FAT_read
+*/
+
 int file_system::FAT_read()
 {
     disk->errlog << "Attempting to read FAT from disk." << std::endl;
@@ -45,6 +55,11 @@ int file_system::FAT_read()
     this->ftable = (entry *)buffer;
     return 0;
 }
+
+/*
+    ********
+    FAT_init
+*/
 
 int file_system::FAT_init(int flag)
 {

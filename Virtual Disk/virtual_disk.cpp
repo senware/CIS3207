@@ -1,5 +1,10 @@
 #include "virtual_disk.h"
 
+/*
+    ************
+    constructors
+*/
+
 virtual_disk::virtual_disk(const char *name)
 {
     // prepare log directory and log file for writing
@@ -16,6 +21,8 @@ virtual_disk::virtual_disk(const char *name)
         if (status == -1)
         {
             errlog << "Failed to create directory: " << log_folder << "." << std::endl;
+            closedir(directory);
+            free(log_filename);
             exit(1);
         }
     }
@@ -57,6 +64,8 @@ virtual_disk::virtual_disk(const char *name, int capacity)
         if (status == -1)
         {
             errlog << "Failed to create directory: " << log_folder << "." << std::endl;
+            free(log_filename);
+            closedir(directory);
             exit(1);
         }
     }
@@ -94,6 +103,8 @@ virtual_disk::virtual_disk(const char *name, int capacity)
         if (status == -1)
         {
             errlog << "Failed to create directory " << path << "." << std::endl;
+            free(log_filename);
+            closedir(directory);
             exit(1);
         }
     }
@@ -113,6 +124,8 @@ virtual_disk::virtual_disk(const char *name, int capacity)
     if (this->file_descriptor < 0)
     {
         errlog << "Failed to create disk." << std::endl;
+        free(log_filename);
+        free(diskname);
         exit(2);
     }
 
@@ -127,6 +140,8 @@ virtual_disk::virtual_disk(const char *name, int capacity)
     if (bytes < 0)
     {
         errlog << "Disk initialization failure, could not 0 disk." << std::endl;
+        free(diskname);
+        free(buffer);
         exit(3);
     }
     // otherwise print a confirmation message with the size of the new disk
@@ -141,6 +156,22 @@ virtual_disk::virtual_disk(const char *name, int capacity)
     free(diskname);
     free(buffer);
 }
+
+/*
+    **********
+    destructor
+*/
+
+virtual_disk::~virtual_disk()
+{
+    errlog.close();
+    close(this->file_descriptor);
+}
+
+/*
+    ***********
+    write_block
+*/
 
 int virtual_disk::write_block(char *buffer, int buff_size, int block, int flag)
 {
@@ -177,6 +208,11 @@ int virtual_disk::write_block(char *buffer, int buff_size, int block, int flag)
     return 0;
 }
 
+/*
+    **********
+    read_block
+*/
+
 int virtual_disk::read_block(void *buffer, int buff_size, int block)
 {
     // find location of the block's bytes on the disk
@@ -199,21 +235,29 @@ int virtual_disk::read_block(void *buffer, int buff_size, int block)
     return 0;
 }
 
+/*
+    *********
+    rm_blocks
+*/
+
 int virtual_disk::rm_blocks(int blocks)
 {
-    // decrement free space
+    // increment free space
     // file system will handle removal of references to blocks
     // no need to zero disk
-    this->free_blocks -= blocks;
+    this->free_blocks += blocks;
 
     // save disk metadata to disk
     save_disk();
-    // force write to disk
-    syncfs(this->file_descriptor);
 
     // return number of deleted blocks
     return blocks;
 }
+
+/*
+    *********
+    save_disk
+*/
 
 int virtual_disk::save_disk()
 {
@@ -242,6 +286,11 @@ int virtual_disk::save_disk()
     // return 0 on success
     return 0;
 }
+
+/*
+    *********
+    load_disk
+*/
 
 int virtual_disk::load_disk(const char *name)
 {

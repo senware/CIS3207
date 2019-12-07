@@ -1,5 +1,10 @@
 #include "file_system.h"
 
+/*
+    **********
+    vfs_search
+*/
+
 int file_system::vfs_search(const char *name)
 {
     disk->errlog << "Beginning search for entry: " << name << "." << std::endl;

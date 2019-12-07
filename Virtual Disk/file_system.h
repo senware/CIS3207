@@ -43,8 +43,10 @@ struct vnode
     file_t file_type;
     // starting block of the file
     int start = -1;
-    // size of the file in blocks
+    // size of the file binary in blocks
     int file_size;
+    // end of file byte
+    int eof_byte;
     // list of file and directory starting blocks in this Directory (V_DIRECTORY)
     // contents[0] = parent
     // contents[1] = self
@@ -95,52 +97,63 @@ private:
     // FUNCTIONS
 
 public:
+    // Defined in file_system.cpp:
     // Constructor
     file_system(virtual_disk *);
 
+    // Defined in vfs_create-mkdir.cpp:
     // create a new file
     int vfs_create(const char *);
     // create a new file in directory
     int vfs_create(const char *, const char *);
-
     // create a new directory
     int vfs_mkdir(const char *);
     // create a new directory in directory
     int vfs_mkdir(const char *, const char *);
 
+    // Defined in vfs_remove.cpp:
+    // delete a file
+    int vfs_rm(const char *);
+
+    // Defined in vfs_open-close.cpp:
     // open file, add to open file table, returns file descriptor to file
     int vfs_open(const char *);
     // close file, removes file from open file table
     int vfs_close(int);
 
+    // Defined in vfs_write-read.cpp:
+    // write data to a file
+    int vfs_write(int, char *, int);
+    // read data from a file
+    int vfs_read(int, char *, int);
+    // move file offset
+    int vfs_seek(int, int);
+    // truncate the file to a smaller size (data loss)
+    int vfs_trunc(int, int);
+    // return length of file, not including the eof byte
+    int vfs_get_length(int);
+
 private:
-    // load existing file system from disk
-    void load_fsystem();
+    // Defined in FAT.cpp:
     // write or overwrite FAT on disk
     int FAT_write(int);
     // read FAT from disk
     int FAT_read();
     // initializes the FAT
     int FAT_init(int);
-    // write file to disk
-    int vfs_write(struct vfile *);
 
-    /*
-        MAKE PRIVATE
-        (after testing)
-    */
-public:
+    // Defined in vfs_sync_file.cpp:
+    // write file to disk
+    int vfs_sync_file(struct vfile *);
+
+    // Defined in search.cpp:
     // search for directory and file names
     //returns starting block number for metadata
     int vfs_search(const char *);
     // recursive loop for vfs_search
     int rec_search(const char *, vnode *);
 
-    /*
-        END MAKE PRIVATE
-    */
-
-private:
+    // Defined in utilities.cpp:
     // returns next free block or -1 if there are no free blocks
     int next_free_block();
     // add an entry to a directory
