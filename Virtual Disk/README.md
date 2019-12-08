@@ -1,13 +1,11 @@
 # File System on a Virtual Disk
 
-whoooooooooo boyyyyyyyyyyy
+this readme is the last thing i need to do
 
-im gonna go eat
+again, putting this off until tomorrow
 
-and finish this all up tomorrow night
+worked all day today, skipped dinner
 
-ive been sick all week
+its 2:30 am
 
-and i've put so many hours into this over the past month
-
-so oh fuckin well
+ehhhhhhhhhhhhh
