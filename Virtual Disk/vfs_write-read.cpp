@@ -25,10 +25,12 @@ int file_system::vfs_write(int fd, char *buffer, int size)
         disk->errlog << "   Buffer was not properly initialized. Failed to write to file." << std::endl;
         return -1;
     }
+
     // resize file if need be
-    int new_size = file->offset + size + 1;
+    int new_size = file->offset + size;
     int old_size = file->metadata->file_size * disk->get_block_size();
     // (the +1 is for the new end of file, which could very well be in it's very own block. how cute.)
+
     if (new_size > old_size)
     {
         // calculate new blocks needed to hold new bytes
@@ -37,6 +39,7 @@ int file_system::vfs_write(int fd, char *buffer, int size)
         {
             new_blocks++;
         }
+
         // if there isnt enough space left on the disk
         if (new_blocks > disk->get_free_blocks())
         {
@@ -45,11 +48,11 @@ int file_system::vfs_write(int fd, char *buffer, int size)
             // set the size equal to the amount of free space
             size = new_blocks * disk->get_block_size() - 1;
 
-            new_size = file->offset + size - 1;
+            new_size = file->offset + size;
         }
 
-        disk->errlog << "   Resizing file from " << old_size
-                     << " to " << new_size << std::endl;
+        disk->errlog << "   Resizing file from " << file->metadata->eof_byte
+                     << " to " << new_size - 1 << std::endl;
 
         // increment the file size (remember, this is in blocks, and does not including metadata)
         file->metadata->file_size += new_blocks;
@@ -77,11 +80,8 @@ int file_system::vfs_write(int fd, char *buffer, int size)
     // write file changes to disk
     if (vfs_sync_file(file) == -1)
     {
-        disk->errlog << "   Failed to write file to disk. Restoring from backup." << std::endl;
-        char *fname = (char *)malloc(strlen(file->metadata->filename));
-        strcpy(fname, file->metadata->filename);
+        disk->errlog << "   Failed to write file to disk. Closing file descriptor " << fd << "." << std::endl;
         vfs_close(fd);
-        vfs_open(fname);
         return -1;
     }
 
@@ -112,7 +112,7 @@ int file_system::vfs_read(int fd, char *buffer, int size)
     // Do not read past the end of file byte
     if (file->offset + size >= file->metadata->eof_byte)
     {
-        size -= file->metadata->eof_byte - file->offset;
+        size = file->metadata->eof_byte - file->offset;
     }
 
     // read bytes from file into buffer
@@ -122,6 +122,8 @@ int file_system::vfs_read(int fd, char *buffer, int size)
     {
         buffer[j] = file->binary[index];
     }
+
+    file->offset = index;
 
     disk->errlog << "   Successfully read " << size << " bytes from file " << file->metadata->filename << "." << std::endl;
     return size;
@@ -178,6 +180,15 @@ int file_system::vfs_trunc(int fd, int new_length)
 
     disk->errlog << "Attempting to truncate file " << file->metadata->filename << "." << std::endl;
 
+    if (new_length >= file->metadata->eof_byte)
+    {
+        disk->errlog << "   Length greater or equal to current length." << std::endl
+                     << "File will not be truncated." << std::endl
+                     << "File offset set to end of file." << std::endl;
+        file->offset = file->metadata->eof_byte;
+        return -1;
+    }
+
     // set the new number of blocks to the ceiling of new length / block size
     int num_blocks = new_length / disk->get_block_size();
     if (new_length % disk->get_block_size() > 0)
@@ -190,19 +201,18 @@ int file_system::vfs_trunc(int fd, int new_length)
     file->metadata->eof_byte = new_length;
     // set the EOF byte
     file->binary[file->metadata->eof_byte] = END_OF_FILE;
+    file->offset = file->metadata->eof_byte;
 
     // write changes to disk
     if (vfs_sync_file(file) == -1)
     {
-        disk->errlog << "   Failed to write file to disk. Restoring from backup." << std::endl;
-        char *fname = (char *)malloc(strlen(file->metadata->filename));
-        strcpy(fname, file->metadata->filename);
+        disk->errlog << "   Failed to write file to disk. Closing file descriptor " << fd << "." << std::endl;
         vfs_close(fd);
-        vfs_open(fname);
         return -1;
     }
 
-    disk->errlog << "File " << file->metadata->filename << " truncated to " << new_length << " bytes." << std::endl;
+    disk->errlog << "File " << file->metadata->filename << " truncated to " << new_length << " bytes." << std::endl
+                 << "File offset set to end of file." << std::endl;
     return 0;
 }
 

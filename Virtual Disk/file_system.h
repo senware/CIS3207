@@ -38,14 +38,14 @@ enum file_t
 struct vnode
 {
     // name of the file
-    char filename[16];
+    char filename[64];
     // Directory (V_DIRECTORY) or File (V_FILE)
     file_t file_type;
     // starting block of the file
-    int start = -1;
+    int start;
     // size of the file binary in blocks
     int file_size;
-    // end of file byte
+    // end of file byte (effective file size)
     int eof_byte;
     // list of file and directory starting blocks in this Directory (V_DIRECTORY)
     // contents[0] = parent

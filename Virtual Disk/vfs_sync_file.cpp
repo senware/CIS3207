@@ -112,7 +112,7 @@ int file_system::vfs_sync_file(struct vfile *file)
         char *buffer = (char *)file->binary;
 
         // for every block in the new file
-        for (int i = 0; i < file->metadata->start; i++)
+        for (int i = 0; i < file->metadata->file_size; i++)
         {
             // point to the next block of the file
             current = ftable[current].next;

@@ -65,51 +65,35 @@ public:
     std::ofstream errlog;
     /*
         Constructor:
-            arguments:
-                name: name of virtual disk file to be created
-                capacity: total size of disk file in MB to be created
+            name: name of virtual disk file to be created
+            capacity: total size of disk file in MB to be created
     */
-    virtual_disk(const char *, int);
+    virtual_disk(const char *);
     // Constructor for loading existing disk
-    virtual_disk(const char *name);
+    virtual_disk(const char *, int);
     // Destructor to close file descriptors
     ~virtual_disk();
 
     /*
-        Helper Function: to be called by file system's write function
-            arguments:
-                buffer: buffer to be written to disk
-                buff_size: size of the buffer
-                block: which block to write to
-                flag: WRITE or OVERWRITE
+        buffer: buffer to be written to disk
+        buff_size: size of the buffer
+        block: which block to write to
+        flag: WRITE or OVERWRITE
     */
     int write_block(char *, int, int, int);
 
     /*
-        Helper Function: to be called by file system's read function
-            arguments:
-                buffer: buffer to read bytes into
-                buff_size: size of the buffer
-                block: which block to read from
+        buffer: buffer to read bytes into
+        buff_size: size of the buffer
+        block: which block to read from
     */
     int read_block(void *, int, int);
 
     /*
-        Helper Function: to be called by file system's remove function
-            arguments:
-                blocks: number of blocks to "remove"
+        
+        blocks: number of blocks to "remove"
     */
     int rm_blocks(int);
-
-    // saves disk metadata to disk
-    int save_disk();
-
-    /*
-        load disk into memory
-        meant to be used by constructor(1)
-        WARNING: may cause data loss if used incorrectly
-    */
-    int load_disk(const char *);
 
     //
     // getters:
@@ -127,19 +111,11 @@ public:
     // returns blocks remaining
     int get_free_blocks() { return this->free_blocks; }
 
-    //
-    // setters:
-
-    // set name to name
-    void set_name(const char *name) { this->name = name; }
-    // set capacity to capacity
-    void set_capacity(u_int32_t capacity) { this->capacity = capacity; }
-    // set block size to block size
-    void set_block_size(int block_size) { this->block_size = block_size; }
-    // set number of blocks to blocks
-    void set_blocks(int blocks) { this->blocks = blocks; }
-    // set file descriptor to fd
-    void set_fd(int fd) { this->file_descriptor = fd; }
-    // set number of free blocks to free blocks
-    void set_free_blocks(int free_blocks) { this->free_blocks = free_blocks; }
+private:
+    // to be called by constructor
+    void create_disk(const char *, int);
+    // saves disk metadata to disk
+    int save_disk();
+    // load disk metadata into memory
+    int load_disk(const char *);
 };

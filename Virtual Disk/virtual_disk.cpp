@@ -13,14 +13,14 @@ virtual_disk::virtual_disk(const char *name)
     DIR *directory = opendir(log_folder);
     // if log directory doesn't exist, create it
     int status;
-    if (errno == ENOENT)
+    if (!directory)
     {
         status = mkdir(log_folder, S_IRWXU | S_IRWXG | S_IRWXO);
 
         // if creation of the /log directory fails, print and error message and exit
         if (status == -1)
         {
-            errlog << "Failed to create directory: " << log_folder << "." << std::endl;
+            std::cerr << "Failed to create directory: " << log_folder << "." << std::endl;
             closedir(directory);
             free(log_filename);
             exit(1);
@@ -38,8 +38,8 @@ virtual_disk::virtual_disk(const char *name)
 
     if (load_disk(name) == -1)
     {
-        errlog << "Creating new disk with name: " << name << "and size 64." << std::endl;
-        virtual_disk(name, 64);
+        errlog << "Creating new disk with name: " << name << " and size 64." << std::endl;
+        create_disk(name, 64);
     }
     else
     {
@@ -50,20 +50,41 @@ virtual_disk::virtual_disk(const char *name)
 
 virtual_disk::virtual_disk(const char *name, int capacity)
 {
+    create_disk(name, capacity);
+}
+
+/*
+    **********
+    destructor
+*/
+
+virtual_disk::~virtual_disk()
+{
+    errlog.close();
+    close(this->file_descriptor);
+}
+
+/*
+    ***********
+    create_disk
+*/
+
+void virtual_disk::create_disk(const char *name, int capacity)
+{
     // prepare log directory and log file
     char *log_filename = (char *)malloc(strlen(name) + 13);
     const char *log_folder = "./logs";
     DIR *directory = opendir(log_folder);
     // if log directory doesn't exist, create it
     int status;
-    if (errno == ENOENT)
+    if (!directory)
     {
         status = mkdir(log_folder, S_IRWXU | S_IRWXG | S_IRWXO);
 
         // if creation of the /log directory fails, print and error message and exit
         if (status == -1)
         {
-            errlog << "Failed to create directory: " << log_folder << "." << std::endl;
+            std::cerr << "Failed to create directory: " << log_folder << "." << std::endl;
             free(log_filename);
             closedir(directory);
             exit(1);
@@ -76,6 +97,7 @@ virtual_disk::virtual_disk(const char *name, int capacity)
     strcat(log_filename, name);
     strcat(log_filename, ".log");
     // open the log file for writing (new log file)
+    errlog.close();
     errlog.open(log_filename, std::ios::out | std::ios::trunc);
     free(log_filename);
 
@@ -111,7 +133,7 @@ virtual_disk::virtual_disk(const char *name, int capacity)
     closedir(directory);
 
     // copy directory name into a new string that can be concatenated
-    char *diskname = (char *)malloc(50);
+    char *diskname = (char *)malloc(strlen(path) + strlen(name) + 2);
     strcpy(diskname, path);
     // concatenate name to directory
     strcat(diskname, "/");
@@ -150,22 +172,11 @@ virtual_disk::virtual_disk(const char *name, int capacity)
         errlog << "Disk initialized with size " << bytes / MB << " MB." << std::endl;
     }
     // write disk metadata to memory
-    save_disk();
     this->free_blocks--;
+    save_disk();
 
     free(diskname);
     free(buffer);
-}
-
-/*
-    **********
-    destructor
-*/
-
-virtual_disk::~virtual_disk()
-{
-    errlog.close();
-    close(this->file_descriptor);
 }
 
 /*

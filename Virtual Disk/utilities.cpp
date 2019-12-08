@@ -48,6 +48,13 @@ int file_system::add_content(vnode *node, int s_block)
                     return -1;
                 }
                 disk->errlog << "Added entry to directory." << std::endl;
+                // if this directory is the root, update the root directory
+                if (strcmp(node->filename, root->metadata->filename) == 0)
+                {
+                    root->metadata->contents[index = s_block];
+                    root->metadata->contents[index + 1] = END_OF_DIRECTORY;
+                    disk->errlog << "Root directory updated" << std::endl;
+                }
                 return 0;
             }
             // if we are at the last index
