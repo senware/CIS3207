@@ -57,6 +57,9 @@ The `vfs_seek()` function moves the file offset to the location passed to it. It
 The `vfs_get_length()` function returns the location of the end of file byte of a file open at the file descriptor passed to it. The file must be open at the file descriptor passed to this function.
 #### various utility functions
 Honorable mentions go out to `vfs_search()` and it's closely related buddy `rec_search()`. `vfs_search()` starts at the root, and `rec_search()` recursively searches all directories for the sought after file or directory's starting block.
+
 The FAT functions (hey, ever hear of a DIET) `FAT_read()`, `FAT_write()` and `FAT_init()` were super helpful as well, especially `FAT_write()`. The `FAT_write()` function is called every time a change to the FAT is made, namely by `vfs_sync_file()`, but by others as well. It does exactly what it sounds like, also taking `WRITE` and `OVERWRITE` flags as necessary and passing them along to its corresponding `write_block()` calls.
+
 The `next_free_block()` function also takes a lot of calls, any time a new block of disk space has to be allocated. Popular guy. It simply iterates through the FAT, looking for the first time it enounters an entry marked with a 0 and returning the index.
+
 The `add_content()` and `remove_content()` functions were touched on briefly above. They simply add and remove directory entries, and are generally called when files are created and removed from directories. They're nice in that they don't allocate any memory themselves. They simply fill a buffer passed to them by the calling function.
