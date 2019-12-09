@@ -20,3 +20,9 @@ The `rm_block` function increments the free block counter.
 The `load_disk()` function attempts to open the disk file specified by name. This function is meant to be called from the constructor only. If the disk file is found, it creates a `struct disk_save` and loads data from the first block into it. It then copies that data into the disk object.
 #### save_disk
 The `save_disk()` function saves disk metadata. It does so by creating a `struct disk_save`, filling it with data from the disk object, and then writing it to block 0 of the disk.
+
+## file_system.h
+### enum file_t
+Determines whether a `struct vfile` is a file or directory.
+### struct vnode
+Contains file metadata, always implemented as the first block of a file. The metadata includes a file name up to length 63 + null terminating byte; a file type; the start block, where the metadata itself will be stored; the file size, in blocks, 0 if a directory, and the metadata block is not counted here; the end of file byte, which is the last block in file binary, storing a -1, essentially the actual file size; and up to 256 integers, listing the starting blocks of all directory contents, if this node refers to a directory.
