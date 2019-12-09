@@ -61,6 +61,7 @@ int file_system::vfs_sync_file(struct vfile *file)
         if (disk->write_block((char *)file->metadata, sizeof(vnode), current, OVERWRITE) == -1)
         {
             disk->errlog << "Failed to write file metadata to disk" << std::endl;
+            free(temp);
             return -1;
         }
 
@@ -75,6 +76,7 @@ int file_system::vfs_sync_file(struct vfile *file)
             if (disk->write_block(&buffer[i * disk->get_block_size()], disk->get_block_size(), current, OVERWRITE) == -1)
             {
                 disk->errlog << "Failed to write file to disk at block " << current << std::endl;
+                free(temp);
                 return -1;
             }
         }
@@ -90,6 +92,7 @@ int file_system::vfs_sync_file(struct vfile *file)
             if (disk->write_block(&buffer[i * disk->get_block_size()], disk->get_block_size(), current, WRITE) == -1)
             {
                 disk->errlog << "Failed to write file to disk at block " << current << std::endl;
+                free(temp);
                 return -1;
             }
         }
@@ -106,6 +109,7 @@ int file_system::vfs_sync_file(struct vfile *file)
         if (disk->write_block((char *)file->metadata, sizeof(vnode), current, OVERWRITE) == -1)
         {
             disk->errlog << "Failed to write file metadata to disk" << std::endl;
+            free(temp);
             return -1;
         }
 
@@ -120,6 +124,7 @@ int file_system::vfs_sync_file(struct vfile *file)
             if (disk->write_block(&buffer[i * disk->get_block_size()], disk->get_block_size(), current, OVERWRITE) == -1)
             {
                 disk->errlog << "Failed to write file to disk at block " << current << std::endl;
+                free(temp);
                 return -1;
             }
         }
@@ -140,6 +145,7 @@ int file_system::vfs_sync_file(struct vfile *file)
             disk->rm_blocks(1);
         }
     }
+    free(temp);
     // save the updated FAT to disk
     return FAT_write(OVERWRITE);
 }

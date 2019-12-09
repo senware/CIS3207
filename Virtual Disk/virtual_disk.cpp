@@ -110,7 +110,7 @@ void virtual_disk::create_disk(const char *name, int capacity)
     this->free_blocks = this->blocks = this->capacity / this->block_size;
 
     // set the name
-    this->name = name;
+    strcpy(this->name, name);
 
     // declare string to hold directory name
     const char *path = "./disks";
@@ -291,7 +291,7 @@ int virtual_disk::save_disk()
         errlog << "Failed to write disk metadata to disk." << std::endl;
         return -1;
     }
-
+    free(save);
     errlog << "Disk metadata saved successfully."
            << std::endl;
     // return 0 on success
@@ -325,12 +325,13 @@ int virtual_disk::load_disk(const char *name)
     read_block(loaded_disk, sizeof(disk_save), SUPERBLOCK);
 
     // and initialize disk object's fields
-    this->name = loaded_disk->name;
+    strcpy(this->name, loaded_disk->name);
     this->capacity = loaded_disk->capacity;
     this->block_size = BLOCK_SIZE;
     this->blocks = loaded_disk->blocks;
     this->free_blocks = loaded_disk->free_blocks;
 
+    free(loaded_disk);
     errlog << "Disk metadata loaded into memory." << std::endl;
     // return 0 on success
     return 0;

@@ -52,7 +52,7 @@ int file_system::vfs_write(int fd, char *buffer, int size)
         }
 
         disk->errlog << "   Resizing file from " << file->metadata->eof_byte
-                     << " to " << new_size - 1 << std::endl;
+                     << " to " << new_size << std::endl;
 
         // increment the file size (remember, this is in blocks, and does not including metadata)
         file->metadata->file_size += new_blocks;
@@ -74,8 +74,8 @@ int file_system::vfs_write(int fd, char *buffer, int size)
     {
         file->binary[index] = END_OF_FILE;
         file->metadata->eof_byte = index;
-        file->offset = file->metadata->eof_byte;
     }
+    file->offset = index;
 
     // write file changes to disk
     if (vfs_sync_file(file) == -1)
@@ -86,6 +86,7 @@ int file_system::vfs_write(int fd, char *buffer, int size)
     }
 
     disk->errlog << "   File " << file->metadata->filename << " successfully written to disk." << std::endl
+                 << "File offset set to " << index << std::endl
                  << "   Total write size: " << size << std::endl;
     return size;
 }

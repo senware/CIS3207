@@ -48,7 +48,7 @@ class virtual_disk
 {
 private:
     // name of disk
-    const char *name;
+    char name[32];
     // capacity of disk
     u_int32_t capacity;
     // size of block, set to 4096 bytes by default
@@ -99,7 +99,7 @@ public:
     // getters:
 
     // returns name of disk
-    const char *get_name() { return this->name; }
+    char *get_name() { return this->name; }
     // returns total disk capacity in bytes
     u_int32_t get_capacity() { return this->capacity; }
     // returns block size in bytes

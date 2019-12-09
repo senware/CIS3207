@@ -7,6 +7,7 @@
 
 int file_system::vfs_open(const char *name)
 {
+    disk->errlog << "Attempting to open file " << name << "." << std::endl;
     // search for the file, and get it's starting block
     int s_block = vfs_search(name);
     if (s_block == -1)
@@ -24,6 +25,17 @@ int file_system::vfs_open(const char *name)
     if (disk->read_block(buffer, sizeof(vnode), s_block) == -1)
     {
         disk->errlog << "Failed to open file: " << name << "." << std::endl;
+        free(open_file->metadata);
+        free(open_file->binary);
+        free(open_file);
+        return -1;
+    }
+
+    // throw error if trying to open a directory
+    if (open_file->metadata->file_type == V_DIRECTORY)
+    {
+        disk->errlog << "Failed to open file: " << name << std::endl
+                     << "It is a directory." << std::endl;
         free(open_file->metadata);
         free(open_file->binary);
         free(open_file);
@@ -58,7 +70,8 @@ int file_system::vfs_open(const char *name)
     // add the file structure to the table of open files and return the descriptor
     file_desc[index] = open_file;
     num_desc++;
-    disk->errlog << "File " << name << " opened with file descriptor " << index << "." << std::endl;
+    disk->errlog << "File " << name
+                 << " opened with file descriptor " << index << "." << std::endl;
     return index;
 }
 
@@ -72,6 +85,7 @@ int file_system::vfs_close(int fd)
     disk->errlog << "Attempting to close file open at file descriptor " << fd << "." << std::endl;
     if (file_desc[fd])
     {
+        vfs_sync_file(file_desc[fd]);
         char name[16];
         strcpy(name, file_desc[fd]->metadata->filename);
         free(file_desc[fd]->metadata);

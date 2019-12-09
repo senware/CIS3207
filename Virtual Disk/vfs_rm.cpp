@@ -33,6 +33,15 @@ int file_system::vfs_rm(const char *name)
     if (disk->read_block(to_delete, sizeof(vnode), s_block) == -1)
     {
         disk->errlog << "Failed to load file metadata. Failed to delete file." << std::endl;
+        free(to_delete);
+        return -1;
+    }
+
+    if (to_delete->file_type == V_DIRECTORY)
+    {
+        disk->errlog << "Failed to delete file " << to_delete->filename << "." << std::endl
+                     << "It is a directory." << std::endl;
+        free(to_delete);
         return -1;
     }
 
@@ -41,6 +50,8 @@ int file_system::vfs_rm(const char *name)
     if (disk->read_block(parent, sizeof(vnode), to_delete->contents[PARENT]) == -1)
     {
         disk->errlog << "Failed to load parent directory metadata. Failed to delete file." << std::endl;
+        free(to_delete);
+        free(parent);
         return -1;
     }
 
@@ -48,15 +59,19 @@ int file_system::vfs_rm(const char *name)
     if (rm_content(parent, s_block) == -1)
     {
         disk->errlog << "Failed to delete file." << std::endl;
+        free(to_delete);
+        free(parent);
         return -1;
     }
 
     // deallocate file from the FAT
     int count = 1;
+    int last = s_block;
     ftable[s_block].occupied = FREE;
     while (ftable[s_block].next != END_OF_FILE)
     {
         s_block = ftable[s_block].next;
+        ftable[last].next = -1;
         ftable[s_block].occupied = FREE;
         count++;
     }
@@ -66,5 +81,7 @@ int file_system::vfs_rm(const char *name)
     // increment free blocks
     disk->rm_blocks(count);
     disk->errlog << "File " << name << " successfully deleted." << std::endl;
+    free(to_delete);
+    free(parent);
     return 0;
 }
